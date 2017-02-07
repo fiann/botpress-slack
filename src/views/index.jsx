@@ -6,23 +6,20 @@ import {
   FormControl,
   Col,
   Button,
-  ControlLabel,
-  // Panel,
-  // Checkbox,
-  // Glyphicon,
-  // ListGroup,
-  // ListGroupItem,
-  // InputGroup,
-  // Alert
+  ControlLabel
 } from 'react-bootstrap'
 
 import style from './style.scss'
 
 export default class SlackModule extends React.Component {
 
-  state = {
-    message: '',
-    slackApiToken: ''
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      message: '',
+      slackApiToken: ''
+    }
   }
 
   // TODO handle error
@@ -126,9 +123,9 @@ export default class SlackModule extends React.Component {
 
   renderConfigSection = () => (
     <div className={style.section}>
-      {this.renderHeader('Config')}
+      {this.renderHeader('Configuration')}
       {this.renderTextAreaInput('Slack Token', 'slackApiToken', {
-        placeholder: 'paste slack api token here'
+        placeholder: 'Paste your slack api token here...'
       })}
 
       {this.withNoLabel(
@@ -141,7 +138,7 @@ export default class SlackModule extends React.Component {
     <div className={style.section}>
       {this.renderHeader('Test Area')}
       {this.renderTextAreaInput('Message', 'message', {
-        placeholder: 'type test message here'
+        placeholder: 'Type test message here...'
       })}
 
       {this.withNoLabel(
