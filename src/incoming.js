@@ -1,6 +1,6 @@
 import { RTM_EVENTS } from '@slack/client'
 
-const RTM_EVENT_LIST = [
+const OTHER_RTM_EVENTS = [
   "ACCOUNTS_CHANGED",
   "BOT_ADDED",
   "BOT_CHANGED",
@@ -44,12 +44,10 @@ const RTM_EVENT_LIST = [
   "IM_MARKED",
   "IM_OPEN",
   "MANUAL_PRESENCE_CHANGE",
-  "MESSAGE",
   "PIN_ADDED",
   "PIN_REMOVED",
   "PREF_CHANGE",
   "PRESENCE_CHANGE",
-  "REACTION_ADDED",
   "REACTION_REMOVED",
   "RECONNECT_URL",
   "STAR_ADDED",
@@ -67,12 +65,11 @@ const RTM_EVENT_LIST = [
   "TEAM_PROFILE_DELETE",
   "TEAM_PROFILE_REORDER",
   "TEAM_RENAME",
-  "USER_CHANGE",
-  "USER_TYPING"
+  "USER_CHANGE"
 ]
 
 module.exports = (bp) => {
-  bp.slack.rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
+  bp.slack.rtm.on(['RTM_EVENTS.MESSAGE'], function handleRtmMessage(message) {
     console.log("---> 3. Messages received")
     bp.middlewares.sendIncoming({
       platform: 'slack',
@@ -81,9 +78,9 @@ module.exports = (bp) => {
       text: message.text,
       raw: message
     })
-  });
+  })
 
-  bp.slack.rtm.on(RTM_EVENTS.REACTION_ADDED, function handleRtmReactionAdded(reaction) {
+  bp.slack.rtm.on(RTM_EVENTS['REACTION_ADDED'], function handleRtmReactionAdded(reaction) {
     console.log("---> 4. Reaction received")
     bp.middlewares.sendIncoming({
       platform: 'slack',
@@ -92,7 +89,7 @@ module.exports = (bp) => {
       text: reaction.reaction,
       raw: reaction
     })
-  });
+  })
 
   bp.slack.rtm.on(RTM_EVENTS['USER_TYPING'], function handleRtmTypingAdded(typing) {
     console.log("---> 6. User is typing")
@@ -103,5 +100,17 @@ module.exports = (bp) => {
       text: typing.type,
       raw: typing
     })
-  });
+  })
+
+  OTHER_RTM_EVENTS.map((rtmEvent) => {
+    bp.slack.rtm.on(RTM_EVENTS[rtmEvent], function handleOtherRTMevent(event) {
+      console.log("---> 7. Other events " + event.type)
+      bp.middlewares.sendIncoming({
+        platform: 'slack',
+        type: event.type,
+        text: event.type,
+        raw: event
+      })
+    })
+  })
 }
