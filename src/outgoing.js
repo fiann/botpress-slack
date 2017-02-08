@@ -5,8 +5,8 @@ const handleText = (event, next, slack) => {
 
   const {text, raw: {channelId}} = event
   slack.sendTextMessage(
-    event.raw.message,
-    event.raw.to)
+    channelId,
+    text)
   .then(() => next())
   .catch(err => next(err))
 }

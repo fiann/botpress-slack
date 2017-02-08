@@ -21,6 +21,8 @@ const outgoingMiddleware = (event, next) => {
     return next()
   }
 
+  console.log(event)
+
   if (!outgoing[event.type]) {
     return next('Unsupported event type: ' + event.type)
   }
@@ -81,7 +83,7 @@ module.exports = {
     incoming(bp)
 
     setTimeout(() => {
-      bp.slack.sendText("Yoyoyo!!", 'C42UUEZ1D')
+      bp.slack.sendText('C42UUEZ1D', "Yoyoyo!!")
     }, 2000)
   }
 }
