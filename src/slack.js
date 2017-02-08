@@ -10,7 +10,6 @@ class Slack {
 
     this.isConnected = false
 
-
     const slackApiToken = config.slackApiToken.get()
     const rtm = this.rtm = new RtmClient(slackApiToken)
 
