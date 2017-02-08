@@ -36,6 +36,6 @@ export default ({register, sendIncoming}) => {
 
   return {
     setSlackConn: conn => slackConn = conn,
-    sendIncoming,
+    sendIncoming
   }
 }

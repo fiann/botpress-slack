@@ -2,7 +2,7 @@ export default (router, {
   sendText,
   getStatus,
   getConfig,
-  setConfig,
+  setConfig
 }) => {
   router.post('/sendMessage', (req, res) => {
     sendText(req.body.message)

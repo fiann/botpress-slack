@@ -2,6 +2,7 @@ import setupApi from './api'
 import createSendFuncs from './sendFuncs'
 import createConfig from './config'
 import createAdapter from './adapter'
+import incoming from './incoming'
 
 // TODO refactor rename it for better naming consistency
 import SlackConnector from './slackConnector'
@@ -12,12 +13,11 @@ import { createTestIncomingMiddleware } from './testHelper'
 let adapter = null
 let slackConn = null
 
-const channelName = 'slack-module-test'
+const channelName = 'botpress-integration'
 let channel = null
 const getChannel = () => channel
 
 // TODO
-// 2. aggregate SlackConnector creation -- done
 // 3. configurable slack api token
 //    - status management
 //      - no token
@@ -30,9 +30,9 @@ module.exports = {
     adapter = createAdapter(bp.middlewares)
 
     // TODO this is test only
-    bp.middlewares.register(
-      createTestIncomingMiddleware(getChannel)
-    )
+    // bp.middlewares.register(
+    //   createTestIncomingMiddleware(getChannel)
+    // )
   },
 
   ready(bp) {
@@ -54,6 +54,7 @@ module.exports = {
 
     const connectSlack = () => {
       const slackApiToken = config.slackApiToken.get()
+
       if (!slackApiToken) return
 
       if (slackConn) slackConn.disconnect()
@@ -79,9 +80,11 @@ module.exports = {
       sendText,
       getStatus,
       getConfig: config.getAll,
-      setConfig: setConfigAndRestart,
+      setConfig: setConfigAndRestart
     })
 
     connectSlack()
+
+    incoming()
   }
 }

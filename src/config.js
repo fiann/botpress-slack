@@ -12,13 +12,14 @@ import createStorage from './storage'
  * // set token
  * config.slackApiToken.set(NEW_TOKEN)
  */
+
 export default bp => {
   const configKeys = [
     'slackApiToken'
   ]
 
   const configDefaults = {
-    slackApiToken: process.env.BOTPRESS_SLACK_TOKEN
+    slackApiToken: 'xoxb-138666589986-MAUOcS16sx2abfg6FosrdODZ'
   }
 
   const configStorage = createStorage(bp, configDefaults)

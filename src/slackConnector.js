@@ -16,6 +16,7 @@ import { RtmClient, CLIENT_EVENTS, RTM_EVENTS } from '@slack/client'
 // - rate limited
 // - disconnected
 //
+
 export default (slackApiToken, sendIncoming) => {
   let data
   let isConnected = false
@@ -26,6 +27,7 @@ export default (slackApiToken, sendIncoming) => {
   // TODO add rejection for authentication failed
   const authenticateP = new Promise((resolve) => {
     rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
+      console.log("---> 1. Bot is authenticated")
       data = rtmStartData
       resolve(data)
     })
@@ -33,6 +35,7 @@ export default (slackApiToken, sendIncoming) => {
 
   rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
     isConnected = true
+    console.log("---> 2. Bot is connected")
   })
 
   /**
@@ -45,6 +48,7 @@ export default (slackApiToken, sendIncoming) => {
    *   ts: '1482827691.000008',
    *   team: 'T0F3U2VU3' }
    */
+
   rtm.on(RTM_EVENTS.MESSAGE, (message) => {
     // TODO should move this to adapter
     sendIncoming({
