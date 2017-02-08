@@ -55,7 +55,7 @@ module.exports = {
 
     const getStatus = () => ({
       hasSlackApiToken: !!config.slackApiToken.get(),
-      isSlackConnected: false
+      isSlackConnected: bp.slack.isConnected()
     })
 
     const connect = () => {
@@ -80,7 +80,8 @@ module.exports = {
     connect()
     incoming(bp)
 
-    //bp.slack.sendText("Yoyoyo!!", 'D42MWUCBW')
-
+    setTimeout(() => {
+      bp.slack.sendText("Yoyoyo!!", 'C42UUEZ1D')
+    }, 2000)
   }
 }

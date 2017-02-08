@@ -27,9 +27,20 @@ class Slack {
   }
 
   sendText(text, channelId) {
-    if(!isConnected || !text || !channelId) return null
 
-    return rtm.sendMessage(text, channelId)
+    // TODO: Valid connexion status...
+    if(!this.isConnected) {
+      console.log("Err: You are not connected...")
+      return null
+    }
+
+    if ( !text || !channelId) {
+      console.log("Err: Text or Channel is not defined...")
+      return null
+    }
+
+    console.log("---> 5. Sending a message")
+    return this.rtm.sendMessage(text, channelId)
   }
 
   isConnected() {
