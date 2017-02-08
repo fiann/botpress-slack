@@ -11,11 +11,7 @@ export default ({register, sendIncoming}) => {
       return next()
     }
 
-    // if (!outgoing[event.type]) {
-    //   return next('Unsupported event type: ' + event.type)
-    // }
-    //
-    // outgoing[event.type](event, next, messenger)
+    console.log(event)
 
     // TODO update slackConn connection state
     if (!slackConn) return

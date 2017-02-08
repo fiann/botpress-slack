@@ -17,7 +17,7 @@ import { RtmClient, CLIENT_EVENTS, RTM_EVENTS } from '@slack/client'
 // - disconnected
 //
 
-export default (slackApiToken, sendIncoming) => {
+export default (slackApiToken) => {
   let data
   let isConnected = false
 

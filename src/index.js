@@ -1,18 +1,15 @@
 import setupApi from './api'
-import createSendFuncs from './sendFuncs'
 import createConfig from './config'
 import createAdapter from './adapter'
 import incoming from './incoming'
+import outgoing from './outgoing'
+import connector from './connector'
 
-// TODO refactor rename it for better naming consistency
-import SlackConnector from './slackConnector'
+import Slack from './slack'
 
 let adapter = null
-let slackConn = null
-
-const channelName = 'botpress-integration'
-let channel = null
-const getChannel = () => channel
+let connection = null
+let channels = null
 
 // TODO
 // 3. configurable slack api token
@@ -21,22 +18,41 @@ const getChannel = () => channel
 //      - connection failed
 //    - update config api -> restart slack rtm if token changed
 
+const outgoingMiddleware = (event, next) => {
+  if (event.platform !== 'slack') {
+    return next()
+  }
+
+  if (!outgoing[event.type]) {
+    return next('Unsupported event type: ' + event.type)
+  }
+
+  outgoing[event.type](event, next, slack)
+}
+
 module.exports = {
+
   init(bp) {
-    bp.slack = createSendFuncs(bp.middlewares.sendOutgoing)
-    adapter = createAdapter(bp.middlewares)
+    bp.middlewares.register({
+      name: 'slack.sendMessages',
+      type: 'outgoing',
+      order: 100,
+      handler: outgoingMiddleware,
+      module: 'botpress-slack',
+      description: 'Sends out messages that targets platform = slack.' +
+      ' This middleware should be placed at the end as it swallows events once sent.'
+    })
   },
 
   ready(bp) {
     const config = createConfig(bp)
 
+    bp.slack = new Slack(bp, config)
+
     const router = bp.getRouter('botpress-slack')
 
-    // TODO handle channel == null
-    const sendText = message => {
-      const channel = getChannel()
-      if (!channel) return
-      bp.slack.sendText(message, channel.id)
+    const sendText = (message, channelId) => {
+      bp.slack.sendText(message, channelId)
     }
 
     const getStatus = () => ({
@@ -44,23 +60,11 @@ module.exports = {
       isSlackConnected: false
     })
 
-    const connectSlack = () => {
-      const slackApiToken = config.slackApiToken.get()
-
-      if (!slackApiToken) return
-
-      if (slackConn) slackConn.disconnect()
-      slackConn = SlackConnector(slackApiToken, adapter.sendIncoming)
-
-      // TODO channel list api
-      // TODO select channel api
-      // TODO remember to handle no channel found state
-      slackConn.authenticateP.done(data => {
-        channel = data.channels.filter(c => c.name === channelName)[0]
-        adapter.setSlackConn(slackConn)
-      })
-
-      slackConn.connect()
+    const connect = () => {
+      if (bp.slack) {
+        bp.slack.disconnect()
+      }
+      bp.slack.connect()
     }
 
     const setConfigAndRestart = newConfigs => {
@@ -75,8 +79,11 @@ module.exports = {
       setConfig: setConfigAndRestart
     })
 
-    connectSlack()
+    connect()
 
-    incoming(bp, slackConn)
+    incoming(bp, bp.slack)
+
+    //bp.slack.sendText("Yoyoyo!!", 'D42MWUCBW')
+
   }
 }
