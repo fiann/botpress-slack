@@ -1,9 +1,7 @@
 import setupApi from './api'
 import createConfig from './config'
-import createAdapter from './adapter'
 import incoming from './incoming'
 import outgoing from './outgoing'
-import connector from './connector'
 
 import Slack from './slack'
 
