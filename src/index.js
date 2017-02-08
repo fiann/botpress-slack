@@ -85,6 +85,6 @@ module.exports = {
 
     connectSlack()
 
-    incoming()
+    incoming(bp, slackConn)
   }
 }

@@ -38,27 +38,6 @@ export default (slackApiToken, sendIncoming) => {
     console.log("---> 2. Bot is connected")
   })
 
-  /**
-   * messge example
-   *
-   * { type: 'message',
-   *   channel: 'C3G5ALKR9',
-   *   user: 'U0LFNE5J9',
-   *   text: 'test',
-   *   ts: '1482827691.000008',
-   *   team: 'T0F3U2VU3' }
-   */
-
-  rtm.on(RTM_EVENTS.MESSAGE, (message) => {
-    // TODO should move this to adapter
-    sendIncoming({
-      platform: 'slack',
-      type: 'message',
-      text: message.text,
-      raw: message
-    })
-  })
-
   return {
     authenticateP,
     rtm,
