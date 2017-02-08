@@ -1,7 +1,7 @@
 import { RTM_EVENTS } from '@slack/client'
 
-module.exports = (bp, {rtm}) => {
-  rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
+module.exports = (bp) => {
+  bp.slack.rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
     console.log("---> 3. Messages received")
     bp.middlewares.sendIncoming({
       platform: 'slack',
@@ -12,7 +12,7 @@ module.exports = (bp, {rtm}) => {
     })
   });
 
-  rtm.on(RTM_EVENTS.REACTION_ADDED, function handleRtmReactionAdded(reaction) {
+  bp.slack.rtm.on(RTM_EVENTS.REACTION_ADDED, function handleRtmReactionAdded(reaction) {
     console.log("---> 4. Reaction received")
     bp.middlewares.sendIncoming({
       platform: 'slack',

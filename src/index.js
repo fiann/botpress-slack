@@ -80,8 +80,7 @@ module.exports = {
     })
 
     connect()
-
-    incoming(bp, bp.slack)
+    incoming(bp)
 
     //bp.slack.sendText("Yoyoyo!!", 'D42MWUCBW')
 
