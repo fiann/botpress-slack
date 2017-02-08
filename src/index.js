@@ -7,9 +7,6 @@ import incoming from './incoming'
 // TODO refactor rename it for better naming consistency
 import SlackConnector from './slackConnector'
 
-// TODO remove this
-import { createTestIncomingMiddleware } from './testHelper'
-
 let adapter = null
 let slackConn = null
 
@@ -28,11 +25,6 @@ module.exports = {
   init(bp) {
     bp.slack = createSendFuncs(bp.middlewares.sendOutgoing)
     adapter = createAdapter(bp.middlewares)
-
-    // TODO this is test only
-    // bp.middlewares.register(
-    //   createTestIncomingMiddleware(getChannel)
-    // )
   },
 
   ready(bp) {
