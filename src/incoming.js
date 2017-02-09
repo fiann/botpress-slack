@@ -25,7 +25,6 @@ const OTHER_RTM_EVENTS = [
   "FILE_CREATED",
   "FILE_DELETED",
   "FILE_PUBLIC",
-  "FILE_SHARED",
   "FILE_UNSHARED",
   "GOODBYE",
   "GROUP_ARCHIVE",
@@ -102,9 +101,21 @@ module.exports = (bp) => {
     })
   })
 
+  bp.slack.rtm.on(RTM_EVENTS['FILE_SHARED'], function handleRtmTypingAdded(file) {
+    console.log("---> 7. User shared a file")
+    bp.middlewares.sendIncoming({
+      platform: 'slack',
+      type: file.type,
+      user: file.user_id, //TODO Get user and save them to DB
+      text: file.type,
+      raw: file
+    })
+  })
+
   OTHER_RTM_EVENTS.map((rtmEvent) => {
     bp.slack.rtm.on(RTM_EVENTS[rtmEvent], function handleOtherRTMevent(event) {
-      console.log("---> 7. Other events " + event.type)
+      console.log("---> 8. Other events " + event.type)
+      console.log(event)
       bp.middlewares.sendIncoming({
         platform: 'slack',
         type: event.type,

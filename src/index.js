@@ -3,6 +3,8 @@ import createConfig from './config'
 import incoming from './incoming'
 import outgoing from './outgoing'
 
+import axios from 'axios'
+
 import Slack from './slack'
 
 let adapter = null
@@ -20,8 +22,6 @@ const outgoingMiddleware = (event, next) => {
   if (event.platform !== 'slack') {
     return next()
   }
-
-  console.log(event)
 
   if (!outgoing[event.type]) {
     return next('Unsupported event type: ' + event.type)
@@ -82,8 +82,29 @@ module.exports = {
     connect()
     incoming(bp)
 
+
+    // TODO: Remove this test
     setTimeout(() => {
-      bp.slack.sendText('C42UUEZ1D', "Yoyoyo!!")
+
+      const token = 'xoxb-138666589986-MAUOcS16sx2abfg6FosrdODZ'
+      const channel = 'C42UUEZ1D'
+      const text = 'test123'
+
+
+      var WebClient = require('@slack/client').WebClient;
+      var web = new WebClient(token);
+      web.chat.postMessage(channel, null, {
+        attachments: [
+          { pretext: "Hello1", text: "Hello2"}
+        ],
+        as_user: true
+      }, function(err, res) {
+          if (err) {
+              console.log('Error:', err);
+          } else {
+              console.log('Message sent: ', res);
+          }
+      })
     }, 2000)
   }
 }

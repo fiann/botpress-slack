@@ -8,22 +8,22 @@ class Slack {
       throw new Error('You need to specify botpress and config')
     }
 
+    this.config = config
     this.isConnected = false
 
     const slackApiToken = config.slackApiToken.get()
     const rtm = this.rtm = new RtmClient(slackApiToken)
 
     rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
-      console.log("---> 1. Bot is authenticated")
+      console.log("---> 1. Bot is authenticated to RTM")
       this.data = rtmStartData
       this.channels = this.data.channels
     })
 
     rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
       this.isConnected = true
-      console.log("---> 2. Bot is connected")
+      console.log("---> 2. Bot is connected to RTM")
     })
-
   }
 
   sendText(channelId, text) {
@@ -53,6 +53,17 @@ class Slack {
 
   connect() {
     this.rtm.start()
+
+
+    // axios.get('https://slack.com/oauth/authorize' +
+    //   '?client_id=' + this.config.clientID.get() +
+    //   '&scope=bot' )
+    //   .then((res) => {
+    //     console.log(res)
+    //   })
+    //   .catch((err) => {
+    //     console.log('Err: ' + err)
+    //   })
   }
 
   disconnect() {
