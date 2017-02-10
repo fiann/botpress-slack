@@ -1,4 +1,3 @@
-import setupApi from './api'
 import createConfig from './config'
 import incoming from './incoming'
 import outgoing from './outgoing'
@@ -100,14 +99,30 @@ module.exports = {
       connectSlack()
     }
 
-    setupApi(router, {
-      sendText,
-      getStatus,
-      getConfig: config.getAll,
-      setConfig: setConfigAndRestart
-    })
-
     connect()
     incoming(bp, slack)
+
+    router.post('/sendMessage', (req, res) => {
+      sendText(req.body.message)
+      res.status(200).end()
+    })
+
+    router.get('/status', (req, res) => {
+      res.json(getStatus())
+    })
+
+    router.get('/config', (req, res) => {
+      res.json(config.getAll())
+    })
+
+    router.post('/config', (req, res) => {
+      setConfigAndRestart(req.body)
+      res.json(getConfig())
+    })
+
+    router.post('/action-endpoint', (req, res) => {
+      console.log('req: ' + req.data)
+      console.log('res: ' + res)
+    })
   }
 }
