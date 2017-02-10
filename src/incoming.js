@@ -67,9 +67,9 @@ const OTHER_RTM_EVENTS = [
   "USER_CHANGE"
 ]
 
-module.exports = (bp) => {
-  bp.slack.rtm.on(['RTM_EVENTS.MESSAGE'], function handleRtmMessage(message) {
-    console.log("---> 3. Messages received")
+module.exports = (bp, slack) => {
+
+  slack.rtm.on(RTM_EVENTS['MESSAGE'], function handleRtmMessage(message) {
     bp.middlewares.sendIncoming({
       platform: 'slack',
       type: message.type,
@@ -79,8 +79,7 @@ module.exports = (bp) => {
     })
   })
 
-  bp.slack.rtm.on(RTM_EVENTS['REACTION_ADDED'], function handleRtmReactionAdded(reaction) {
-    console.log("---> 4. Reaction received")
+  slack.rtm.on(RTM_EVENTS['REACTION_ADDED'], function handleRtmReactionAdded(reaction) {
     bp.middlewares.sendIncoming({
       platform: 'slack',
       type: reaction.type,
@@ -90,8 +89,7 @@ module.exports = (bp) => {
     })
   })
 
-  bp.slack.rtm.on(RTM_EVENTS['USER_TYPING'], function handleRtmTypingAdded(typing) {
-    console.log("---> 6. User is typing")
+  slack.rtm.on(RTM_EVENTS['USER_TYPING'], function handleRtmTypingAdded(typing) {
     bp.middlewares.sendIncoming({
       platform: 'slack',
       type: typing.type,
@@ -101,8 +99,7 @@ module.exports = (bp) => {
     })
   })
 
-  bp.slack.rtm.on(RTM_EVENTS['FILE_SHARED'], function handleRtmTypingAdded(file) {
-    console.log("---> 7. User shared a file")
+  slack.rtm.on(RTM_EVENTS['FILE_SHARED'], function handleRtmTypingAdded(file) {
     bp.middlewares.sendIncoming({
       platform: 'slack',
       type: file.type,
@@ -113,9 +110,7 @@ module.exports = (bp) => {
   })
 
   OTHER_RTM_EVENTS.map((rtmEvent) => {
-    bp.slack.rtm.on(RTM_EVENTS[rtmEvent], function handleOtherRTMevent(event) {
-      console.log("---> 8. Other events " + event.type)
-      console.log(event)
+    slack.rtm.on(RTM_EVENTS[rtmEvent], function handleOtherRTMevent(event) {
       bp.middlewares.sendIncoming({
         platform: 'slack',
         type: event.type,
