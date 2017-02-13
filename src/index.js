@@ -1,5 +1,4 @@
 import createConfig from './config'
-import incoming from './incoming'
 import outgoing from './outgoing'
 import actions from './actions'
 
@@ -87,20 +86,12 @@ module.exports = {
       isSlackConnected: slack.isConnected()
     })
 
-    const connect = () => {
-      if (slack) {
-        slack.disconnect()
-      }
-      slack.connect()
-    }
-
     const setConfigAndRestart = newConfigs => {
       config.setAll(newConfigs)
-      connectSlack()
+      slack.connect(bp)
     }
 
-    connect()
-    incoming(bp, slack)
+    slack.connect(bp)
 
     router.post('/sendMessage', (req, res) => {
       sendText(req.body.message)
@@ -117,19 +108,21 @@ module.exports = {
 
     router.post('/config', (req, res) => {
       setConfigAndRestart(req.body)
-      res.json(getConfig())
-    })
-
-
-    router.get('/oauth', (req, res) => {
-      console.log('req: ' + req.body)
-      console.log('res: ' + res)
-      res.status(200).end()
+      res.json(config.getAll())
     })
 
     router.post('/action-endpoint', (req, res) => {
-      console.log('req: ' + req.body)
-      console.log('res: ' + res)
+      const request = JSON.parse(req.body.payload)
+
+      bp.middlewares.sendIncoming({
+        platform: 'slack',
+        type: 'button',
+        user: request.user.id, //TODO Get user and save them to DB
+        text: 'button',
+        raw: request
+      })
+
+      res.status(200).end()
     })
   }
 }

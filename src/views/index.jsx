@@ -18,10 +18,12 @@ export default class SlackModule extends React.Component {
     super(props)
 
     this.state = {
+      loading: true,
       clientID: '',
       clientSecret: '',
       hostname: '',
-      scope: ''
+      scope: '',
+      apiToken: null
     }
   }
 
@@ -30,11 +32,10 @@ export default class SlackModule extends React.Component {
     .then(() => {
       this.authenticate()
     })
-
   }
 
   // TODO handle error
-  // TODO add eslint about missing class method
+  // TODO add eslint about missing class methodp
 
   getAxios = () => this.props.bp.axios
   mApi = (method, url, body) => this.getAxios()[method]('/api/botpress-slack' + url, body)
@@ -43,12 +44,13 @@ export default class SlackModule extends React.Component {
 
   fetchConfig = () => {
     return this.mApiGet('/config').then(({data}) => {
-      console.log('config', data)
       this.setState({
         clientID: data.clientID,
         clientSecret: data.clientSecret,
         hostname: data.hostname,
-        scope: data.scope
+        scope: data.scope,
+        apiToken: data.apiToken,
+        loading: false
       })
     })
   }
@@ -72,33 +74,61 @@ export default class SlackModule extends React.Component {
       "&redirect_uri=" + this.getRedictURI()
   }
 
-
+  getOAuthTestLink = () => {
+    return "https://slack.com/api/auth.test" + 
+      "?token=" + this.state.apiToken
+  }
 
   getParameterByName = (name) => {
-    const url = window.location.href;
-    name = name.replace(/[\[\]]/g, "\\$&");
-    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-        results = regex.exec(url);
-    if (!results) return null;
-    if (!results[2]) return '';
-    return decodeURIComponent(results[2].replace(/\+/g, " "));
+    const url = window.location.href
+    name = name.replace(/[\[\]]/g, "\\$&")
+    let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+      results = regex.exec(url)
+    if (!results) return null
+    if (!results[2]) return ''
+    return decodeURIComponent(results[2].replace(/\+/g, " "))
+  }
+
+  isAuthenticate = () => {
+    if (!this.state.apiToken) return false
+
+    return this.getAxios().get(this.getOAuthTestLink())
+    .then(({data}) => {
+      if (data.ok) return true
+      console.log("You are not authenticate correctly, retry to authenticate again...")
+      return false
+    })
+    .catch((err) => {
+      console.log("You are not authenticate: " + err)
+      return false
+    })
   }
 
   authenticate = () => {
     const code = this.getParameterByName('code')
 
-    if(!code) return
+    if(!code || this.state.apiToken) return
 
     this.getAxios().get(this.getOAuthAccessLink(code))
     .then(({data}) => {
-      console.log(data)
-    })
+      if (!data.ok) {
+        console.log("You encountered an error during authentification: " + data.error)
+        return
+      }
 
+      this.setState({
+        apiToken: data.access_token
+      })
+
+      setImmediate(() => {
+        this.handleSaveConfig()
+      })
+    })
   }
 
   // ----- event handle functions -----
   handleChange = event => {
-    var { name, value } = event.target
+    const { name, value } = event.target
 
     this.setState({
       [name]: value
@@ -108,15 +138,16 @@ export default class SlackModule extends React.Component {
   handleSaveConfig = () => {
     this.mApiPost('/config', {
       clientID: this.state.clientID,
-      clientSecret: this.state.clientSecret
+      clientSecret: this.state.clientSecret,
+      hostname: this.state.hostname,
+      apiToken: this.state.apiToken,
+      scope: this.state.scope
     })
-    // TODO handle error and response
-  }
-
-  handleAuthentification = () => {
-    this.mApiPost('/config', {
-      clientID: this.state.clientID,
-      clientSecret: this.state.clientSecret
+    .then(({data}) => {
+      this.fetchConfig()
+    })
+    .catch(err => {
+      console.log("An error occured while saving configurations...")
     })
     // TODO handle error and response
   }
@@ -152,10 +183,13 @@ export default class SlackModule extends React.Component {
     type: 'text', ...props
   })
 
-  renderTextAreaInput = (label, name, props = {}) => this.renderInput(label, name, {
-    componentClass: 'textarea',
-    ...props
-  })
+  renderTextAreaInput = (label, name, props = {}) => {
+    return this.renderInput(label, name, {
+      componentClass: 'textarea',
+      rows: 2,
+      ...props
+    })
+  }
 
   withNoLabel = (element) => (
     <FormGroup>
@@ -166,9 +200,7 @@ export default class SlackModule extends React.Component {
   )
 
   renderBtn = (label, handler) => (
-    <Button  onClick={handler}>
-      {label}
-    </Button>
+    <Button  onClick={handler}>{label}</Button>
   )
 
   renderLinkButton = (label, link) => (
@@ -179,49 +211,53 @@ export default class SlackModule extends React.Component {
     </a>
   )
 
-  renderConfigSection = () => (
-    <div className={style.section}>
-      {this.renderHeader('Configuration')}
+  renderAuthentificationButton = () => {
+    return this.withNoLabel(this.renderLinkButton('Authenticate', this.getOAuthLink()))
+  }
 
-      {this.renderTextInput('Client ID', 'clientID', {
-        placeholder: 'Paste your client id here...'
-      })}
-
-      {this.renderTextInput('Client Secret', 'clientSecret', {
-        placeholder: 'Paste your client secret here...'
-      })}
-
-      {this.renderTextInput('Hostname', 'hostname', {
-        placeholder: 'Select the scope here...'
-      })}
+  renderApiToken = () => {
+    return this.renderTextInput('API token', 'apiToken', {
+      disabled: true
+    })
+  }
 
 
-      // TODO: Change for a dropdown
-      {this.renderTextInput('Scope', 'scope', {
-        placeholder: 'Select the scope here...'
-      })}
-
-      {this.withNoLabel(
-        this.renderLinkButton('Authenticate', this.getOAuthLink())
-      )}
-
-      {this.renderTextInput('Code', 'code', {
-        disabled: true
-      })}
-
-      {this.renderTextInput('API token', 'apiToken', {
-        disabled: true
-      })}
-
-
-      {this.withNoLabel(
-        this.renderBtn('Save', this.handleSaveConfig)
-      )}
-    </div>
-  )
+  renderConfigSection = () => {
+    return (
+      <div className={style.section}>
+        {this.renderHeader('Configuration')}
+    
+        {this.renderTextInput('Client ID', 'clientID', {
+          placeholder: 'Paste your client id here...'
+        })}
+    
+        {this.renderTextInput('Client Secret', 'clientSecret', {
+          placeholder: 'Paste your client secret here...'
+        })}
+    
+        {this.renderTextInput('Hostname', 'hostname', {
+          placeholder: 'Select the scope here...'
+        })}
+    
+        // TODO: Change for a dropdown
+        {this.renderTextInput('Scope', 'scope', {
+          placeholder: 'Select the scope here...'
+        })}
+    
+        {!this.isAuthenticate()
+          ? this.renderAuthentificationButton()
+          : this.renderApiToken()}
+    
+        {this.withNoLabel(
+          this.renderBtn('Save', this.handleSaveConfig)
+        )}
+      </div>
+    )
+  }
 
 
   render() {
+    if (this.state.loading) return null
     return <Form horizontal>
       {this.renderConfigSection()}
     </Form>

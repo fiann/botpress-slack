@@ -19,15 +19,15 @@ export default bp => {
     'clientID',
     'clientSecret',
     'hostname',
-    'scope'
+    'bot'
   ]
 
   const configDefaults = {
-    apiToken: 'xoxb-138666589986-MAUOcS16sx2abfg6FosrdODZ',
+    apiToken: null,
     clientID: '138377925429.137954480064',
     clientSecret: 'b0a57b93e2903bff6ce88795b07dabaa',
     hostname: 'https://889b5eab.ngrok.io',
-    scope: 'admin'
+    scope: 'client'
   }
 
   const configStorage = createStorage(bp, configDefaults)

@@ -1,4 +1,5 @@
 import { RtmClient, CLIENT_EVENTS, RTM_EVENTS, WebClient } from '@slack/client'
+import incoming from './incoming'
 
 import axios from 'axios'
 import Promise from 'bluebird'
@@ -10,22 +11,9 @@ class Slack {
       throw new Error('You need to specify botpress and config')
     }
 
+    this.rtm = null
     this.config = config
     this.isConnected = false
-
-
-    const apiToken = config.apiToken.get()
-    const rtm = this.rtm = new RtmClient(apiToken)
-    const web = this.web = new WebClient(apiToken);
-
-    rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
-      this.data = rtmStartData
-      this.channels = this.data.channels
-    })
-
-    rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
-      this.isConnected = true
-    })
   }
 
   sendText(channelId, text) {
@@ -76,8 +64,43 @@ class Slack {
     return this.data
   }
 
-  connect() {
+  connectRTM(bp, apiToken) {
+    if (this.isConnected) {
+      this.disconnect()
+    }
+
+    this.rtm = new RtmClient(apiToken)
+    console.log(apiToken)
+
+    this.rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
+      console.log("1. Authenticated")
+      this.data = rtmStartData
+      this.channels = this.data.channels
+    })
+
+    this.rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
+      console.log("2. Connected")
+      this.isConnected = true
+      incoming(bp, this)
+    })
+
     this.rtm.start()
+  }
+
+  connectWebclient(apiToken) {
+    this.web = new WebClient(apiToken)
+  }
+
+
+  connect(bp) {
+    const apiToken = this.config.apiToken.get()
+
+    if(!apiToken) return
+
+    this.connectRTM(bp, apiToken)
+    this.connectWebclient(apiToken)
+
+    this.isConnected = true
   }
 
   disconnect() {
