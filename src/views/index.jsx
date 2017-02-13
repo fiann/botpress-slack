@@ -23,6 +23,7 @@ export default class SlackModule extends React.Component {
       clientSecret: '',
       hostname: '',
       scope: '',
+      verificationToken: '',
       apiToken: null
     }
   }
@@ -50,6 +51,7 @@ export default class SlackModule extends React.Component {
         hostname: data.hostname,
         scope: data.scope,
         apiToken: data.apiToken,
+        verificationToken: data.verificationToken,
         loading: false
       })
     })
@@ -126,7 +128,6 @@ export default class SlackModule extends React.Component {
     })
   }
 
-  // ----- event handle functions -----
   handleChange = event => {
     const { name, value } = event.target
 
@@ -141,9 +142,11 @@ export default class SlackModule extends React.Component {
       clientSecret: this.state.clientSecret,
       hostname: this.state.hostname,
       apiToken: this.state.apiToken,
+      verificationToken: this.state.verificationToken,
       scope: this.state.scope
     })
     .then(({data}) => {
+      console.log("New configurations have been saved successfully.")
       this.fetchConfig()
     })
     .catch(err => {
@@ -235,7 +238,12 @@ export default class SlackModule extends React.Component {
           placeholder: 'Paste your client secret here...'
         })}
     
+
         {this.renderTextInput('Hostname', 'hostname', {
+          placeholder: 'Select the scope here...'
+        })}
+
+        {this.renderTextInput('Verification Token', 'verificationToken', {
           placeholder: 'Select the scope here...'
         })}
     

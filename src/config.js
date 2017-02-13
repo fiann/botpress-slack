@@ -19,7 +19,8 @@ export default bp => {
     'clientID',
     'clientSecret',
     'hostname',
-    'bot'
+    'verificationToken',
+    'scope'
   ]
 
   const configDefaults = {
@@ -27,6 +28,7 @@ export default bp => {
     clientID: '138377925429.137954480064',
     clientSecret: 'b0a57b93e2903bff6ce88795b07dabaa',
     hostname: 'https://889b5eab.ngrok.io',
+    verificationToken: 'lvfm4zgYi3eYAtqrvnjvchTN',
     scope: 'client'
   }
 

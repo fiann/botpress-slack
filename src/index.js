@@ -111,18 +111,6 @@ module.exports = {
       res.json(config.getAll())
     })
 
-    router.post('/action-endpoint', (req, res) => {
-      const request = JSON.parse(req.body.payload)
-
-      bp.middlewares.sendIncoming({
-        platform: 'slack',
-        type: 'button',
-        user: request.user.id, //TODO Get user and save them to DB
-        text: 'button',
-        raw: request
-      })
-
-      res.status(200).end()
-    })
+    router.get('/user/')
   }
 }

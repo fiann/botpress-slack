@@ -13,12 +13,11 @@ class Slack {
 
     this.rtm = null
     this.config = config
-    this.isConnected = false
+    this.connected = false
   }
 
   sendText(channelId, text) {
-    // TODO: Valid connexion status...
-    if(!this.isConnected) {
+    if(!this.connected) {
       console.log("Err: You are not connected...")
       return null
     }
@@ -37,7 +36,7 @@ class Slack {
 
   sendAttachments(channelId, text, attachments) {
     // TODO: Valid connexion status...
-    if(!this.isConnected) {
+    if(!this.connected) {
       console.log("Err: You are not connected...")
       return null
     }
@@ -57,7 +56,7 @@ class Slack {
   }
 
   isConnected() {
-    return this.isConnected
+    return this.connected
   }
 
   getData() {
@@ -65,22 +64,21 @@ class Slack {
   }
 
   connectRTM(bp, apiToken) {
-    if (this.isConnected) {
+    if (this.connected) {
       this.disconnect()
     }
 
     this.rtm = new RtmClient(apiToken)
-    console.log(apiToken)
 
     this.rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
-      console.log("1. Authenticated")
+      bp.logger.info('slack connector is authenticated')
       this.data = rtmStartData
       this.channels = this.data.channels
     })
 
     this.rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
-      console.log("2. Connected")
-      this.isConnected = true
+      bp.logger.info('slack connector is connected')
+      this.connected = true
       incoming(bp, this)
     })
 
@@ -99,8 +97,6 @@ class Slack {
 
     this.connectRTM(bp, apiToken)
     this.connectWebclient(apiToken)
-
-    this.isConnected = true
   }
 
   disconnect() {

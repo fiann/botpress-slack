@@ -25,7 +25,6 @@ const handleAttachments = (event, next, slack) => {
     return next()
   }
 
-  console.log(event.text)
   const text = event.text
   const channelId = event.raw.to
   const attachments = event.raw.attachments
