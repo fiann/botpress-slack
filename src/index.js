@@ -76,14 +76,14 @@ module.exports = {
 
     slack = new Slack(bp, config)
 
-    const router = bp.getRouter('botpress-slack')
+    const router = bp.getRouter('botpress-slack', { 'auth': req => !/\/action-endpoint/i.test(req.originalUrl) })
 
     const sendText = (message, channelId) => {
       slack.sendText(message, channelId)
     }
 
     const getStatus = () => ({
-      hasSlackApiToken: !!config.slackApiToken.get(),
+      hasApiToken: !!config.apiToken.get(),
       isSlackConnected: slack.isConnected()
     })
 
@@ -120,8 +120,15 @@ module.exports = {
       res.json(getConfig())
     })
 
+
+    router.get('/oauth', (req, res) => {
+      console.log('req: ' + req.body)
+      console.log('res: ' + res)
+      res.status(200).end()
+    })
+
     router.post('/action-endpoint', (req, res) => {
-      console.log('req: ' + req.data)
+      console.log('req: ' + req.body)
       console.log('res: ' + res)
     })
   }

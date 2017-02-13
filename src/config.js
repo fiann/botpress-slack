@@ -7,25 +7,27 @@ import createStorage from './storage'
  * import createConfig from './config'
  *
  * const config = createConfig(bp)
- * const token = config.slackApiToken.get()
+ * const token = config.apiToken.get()
  *
  * // set token
- * config.slackApiToken.set(NEW_TOKEN)
+ * config.apiToken.set(NEW_TOKEN)
  */
 
 export default bp => {
   const configKeys = [
-    'slackApiToken',
+    'apiToken',
     'clientID',
     'clientSecret',
-    'redirectURL'
+    'hostname',
+    'scope'
   ]
 
   const configDefaults = {
-    slackApiToken: 'xoxb-138666589986-MAUOcS16sx2abfg6FosrdODZ',
+    apiToken: 'xoxb-138666589986-MAUOcS16sx2abfg6FosrdODZ',
     clientID: '138377925429.137954480064',
     clientSecret: 'b0a57b93e2903bff6ce88795b07dabaa',
-    redirectURL: 'https://1d8609ae.ngrok.io'
+    hostname: 'https://889b5eab.ngrok.io',
+    scope: 'admin'
   }
 
   const configStorage = createStorage(bp, configDefaults)

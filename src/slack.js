@@ -14,9 +14,9 @@ class Slack {
     this.isConnected = false
 
 
-    const slackApiToken = config.slackApiToken.get()
-    const rtm = this.rtm = new RtmClient(slackApiToken)
-    const web = this.web = new WebClient(slackApiToken);
+    const apiToken = config.apiToken.get()
+    const rtm = this.rtm = new RtmClient(apiToken)
+    const web = this.web = new WebClient(apiToken);
 
     rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
       this.data = rtmStartData
