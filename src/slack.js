@@ -112,6 +112,7 @@ class Slack {
       "?token=" + this.config.apiToken.get() +
       "&user=" + userId +
       "&includes_labels=true"
+
     return axios.get(url)
       .then(({data}) => {
         if (!data.ok) {

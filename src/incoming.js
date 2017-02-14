@@ -153,8 +153,8 @@ module.exports = (bp, slack) => {
 
 
   slack.rtm.on(RTM_EVENTS['MESSAGE'], function handleRtmMessage(message) {
-    
     if (isFromBot(message)) return
+
     preprocessEvent(message)
     .then(profile => {
       const raw = formatRaw(message)
@@ -236,7 +236,7 @@ module.exports = (bp, slack) => {
 
   OTHER_RTM_EVENTS.map((rtmEvent) => {
     slack.rtm.on(RTM_EVENTS[rtmEvent], function handleOtherRTMevent(event) {
-      console.log(event)
+      
       bp.middlewares.sendIncoming({
         platform: 'slack',
         type: event.type,
