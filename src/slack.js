@@ -57,42 +57,42 @@ class Slack {
     this.validateOptions(options)
   }
 
-  sendText(channel, text, options) {
-    this.validateBeforeSending(channel.id, options)
+  sendText(channelId, text, options) {
+    this.validateBeforeSending(channelId, options)
     this.validateText(text)
 
     return Promise.fromCallback(cb => {
-      this.web.chat.postMessage(channel.id, text, options, cb)
+      this.web.chat.postMessage(channelId, text, options, cb)
     })
   }
 
-  sendUpdateText(ts, channel, text, options) {
-    this.validateBeforeSending(channel.id, options)
+  sendUpdateText(ts, channelId, text, options) {
+    this.validateBeforeSending(channelId, options)
     this.validateText(text)
 
     return Promise.fromCallback(cb => {
-      this.web.chat.update(ts, channel.id, text, options, cb)
+      this.web.chat.update(ts, channelId, text, options, cb)
     })
   }
 
-  sendAttachments(channel, attachments, options) {
-    this.validateBeforeSending(channel.id, options)
+  sendAttachments(channelId, attachments, options) {
+    this.validateBeforeSending(channelId, options)
     this.validateAttachments(attachments)
   
     return Promise.fromCallback(cb => {
-      this.web.chat.postMessage(channel.id, null, {
+      this.web.chat.postMessage(channelId, null, {
         attachments,
         ...options
       }, cb)
     })
   }
 
-  sendUpdateAttachments(ts, channel, attachments, options ) {
-    this.validateBeforeSending(channel.id, options)
+  sendUpdateAttachments(ts, channelId, attachments, options ) {
+    this.validateBeforeSending(channelId, options)
     this.validateAttachments(attachments)
 
     return Promise.fromCallback(cb => {
-      this.web.chat.update(ts, channel.id, null, {
+      this.web.chat.update(ts, channelId, null, {
         attachments,
         ...options
       }, cb)

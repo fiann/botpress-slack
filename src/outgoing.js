@@ -14,11 +14,11 @@ const handleText = (event, next, slack) => {
     return next()
   }
 
-  const channel = event.raw.channel
+  const channelId = event.raw.channelId
   const text = event.text
   const options = event.raw.options
 
-  return handlePromise(next, slack.sendText(channel, text, options))
+  return handlePromise(next, slack.sendText(channelId, text, options))
 }
 
 const handleAttachments = (event, next, slack) => {
@@ -26,11 +26,11 @@ const handleAttachments = (event, next, slack) => {
     return next()
   }
 
-  const channel = event.raw.channel
+  const channelId = event.raw.channelId
   const attachments = event.raw.attachments
   const options = event.raw.options
 
-  return handlePromise(next, slack.sendAttachments(channel, attachments, options))
+  return handlePromise(next, slack.sendAttachments(channelId, attachments, options))
 }
 
 const handleUpdateText = (event, next, slack) => {
@@ -38,12 +38,12 @@ const handleUpdateText = (event, next, slack) => {
     return next()
   }
 
-  const channel = event.raw.channel
+  const channelId = event.raw.channelId
   const text = event.text
   const options = event.raw.options
   const ts = event.raw.ts
   
-  return handlePromise(next, slack.sendUpdateText(ts, channel, text, options))
+  return handlePromise(next, slack.sendUpdateText(ts, channelId, text, options))
 }
 
 const handleUpdateAttachments = (event, next, slack) => {
@@ -51,12 +51,12 @@ const handleUpdateAttachments = (event, next, slack) => {
     return next()
   }
 
-  const channel = event.raw.channel
+  const channelId = event.raw.channelId
   const attachments = event.raw.attachments
   const options = event.raw.options
   const ts = event.raw.ts
 
-  return handlePromise(next, slack.sendUpdateAttachments(ts, channel, attachments, options))
+  return handlePromise(next, slack.sendUpdateAttachments(ts, channelId, attachments, options))
 }
 
 module.exports = {
