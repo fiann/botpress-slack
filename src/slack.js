@@ -16,41 +16,85 @@ class Slack {
     this.connected = false
   }
 
-  sendText(channelId, text) {
-    if(!this.connected) {
-      console.log("Err: You are not connected...")
-      return null
-    }
 
-    if (!text || !channelId) {
-      console.log("Err: Text or Channel is not defined...")
-      return null
+  validateConnection() {
+    if(!this.connected) {
+      throw new Error("You are not connected...")
     }
+  }
+
+  validateText(text) {
+    const type = typeof(text)
+    if ( type !== 'string') {
+      throw new Error("Text format is not valid (actual: " + type + ", required: string)")
+    }  
+  }
+
+  validateChannelId(channelId) {
+    const type = typeof(channelId)
+    if ( type !== 'string') {
+      throw new Error("Channel id format is not valid (actual: " + type + ", required: string)")
+    }  
+  }
+
+  validateAttachments(attachments) {
+    const type = typeof(attachments)
+    if ( type !== 'object') {
+      throw new Error("Attachments format is not valid (actual: " + type + ", required: object)")
+    }  
+  }
+
+  validateOptions(options) {
+    const type = typeof(options)
+    if ( type !== 'object') {
+      throw new Error("Options format is not valid (actual: " + type + ", required: object)")
+    }  
+  }
+
+  validateBeforeSending(channelId, options) {
+    this.validateConnection()
+    this.validateChannelId(channelId)
+    this.validateOptions(options)
+  }
+
+  sendText(channel, text, options) {
+    this.validateBeforeSending(channel.id, options)
+    this.validateText(text)
 
     return Promise.fromCallback(cb => {
-      this.web.chat.postMessage(channelId, text, {
-        as_user: true
+      this.web.chat.postMessage(channel.id, text, options, cb)
+    })
+  }
+
+  sendUpdateText(ts, channel, text, options) {
+    this.validateBeforeSending(channel.id, options)
+    this.validateText(text)
+
+    return Promise.fromCallback(cb => {
+      this.web.chat.update(ts, channel.id, text, options, cb)
+    })
+  }
+
+  sendAttachments(channel, attachments, options) {
+    this.validateBeforeSending(channel.id, options)
+    this.validateAttachments(attachments)
+  
+    return Promise.fromCallback(cb => {
+      this.web.chat.postMessage(channel.id, null, {
+        attachments,
+        ...options
       }, cb)
     })
   }
 
-  sendAttachments(channelId, text, attachments) {
-    // TODO: Valid connexion status...
-    if(!this.connected) {
-      console.log("Err: You are not connected...")
-      return null
-    }
-
-    if (!text || !channelId) {
-      console.log("Err: Text or Channel is not defined...")
-      return null
-    }
-
+  sendUpdateAttachments(ts, channel, attachments, options ) {
+    this.validateBeforeSending(channel.id, options)
+    this.validateAttachments(attachments)
 
     return Promise.fromCallback(cb => {
-      this.web.chat.postMessage(channelId, null, {
+      this.web.chat.update(ts, channel.id, null, {
         attachments,
-        as_user: true
+        ...options
       }, cb)
     })
   }
@@ -61,6 +105,22 @@ class Slack {
 
   getData() {
     return this.data
+  }
+
+  getUserProfile(userId) {
+    const url = "https://slack.com/api/users.profile.get" +
+      "?token=" + this.config.apiToken.get() +
+      "&user=" + userId +
+      "&includes_labels=true"
+    return axios.get(url)
+      .then(({data}) => {
+        if (!data.ok) {
+          throw new Error("Error getting user profile:" + userId )
+        }
+
+        return data.profile
+      })
+      .catch(err => console.log(`Error getting user profile: ${err}`))
   }
 
   connectRTM(bp, apiToken) {

@@ -1,5 +1,8 @@
 import { RTM_EVENTS } from '@slack/client'
 
+import LRU from 'lru-cache'
+import Users from './users'
+
 const OTHER_RTM_EVENTS = [
   "ACCOUNTS_CHANGED",
   "BOT_ADDED",
@@ -69,54 +72,155 @@ const OTHER_RTM_EVENTS = [
 
 module.exports = (bp, slack) => {
 
+  const users = Users(bp, slack)
+
+  const messagesCache = LRU({
+    max: 10000,
+    maxAge: 60 * 60 * 1000
+  })
+
+  const isButtonAction = payload => {
+    return payload.message_ts ? true : false
+  }
+
+  const isFromBot = event => {
+    if (event.bot_id || event.subtype) {
+      return true
+    }
+    return false
+  }
+
+  const preprocessEvent = payload => {
+
+    let userId = payload.user
+    let channelId = payload.channel
+    let ts = payload.ts
+
+    if (isButtonAction(payload)) {
+      userId = payload.user.id
+      channelId = payload.channel.id
+      ts = payload.message_ts
+    }
+
+    const mid = `${payload.channel}_${payload.user}_${payload.ts}`
+
+    if (mid && !messagesCache.has(mid)) {
+      // We already processed this message
+      payload.alreadyProcessed = true
+    } else {
+      // Mark it as processed
+      messagesCache.set(mid, true)
+    }
+
+    return users.getOrFetchUserProfile(userId)
+  }
+
+  const formatRaw = (raw) => {
+    raw.channel = { id: raw.channel }
+    raw.user = { id: raw.user }
+    raw.team = { id: raw.team }
+
+    return raw
+  }
+
+  const router = bp.getRouter('botpress-slack', { 'auth': req => !/\/action-endpoint/i.test(req.originalUrl) })
+
+  router.post('/action-endpoint', (req, res) => {
+    const request = JSON.parse(req.body.payload)
+    if (!slack.isConnected()) {
+      throw new Error("You are not connected and authenticated")
+    }
+
+    if (request.token !== slack.config.verificationToken.get()) {
+      throw new Error("Verification token are not matching")
+    }
+
+    preprocessEvent(request)
+    .then(profile => {
+      bp.middlewares.sendIncoming({
+        platform: 'slack',
+        type: 'button',
+        user: profile,
+        text: 'button',
+        raw: request
+      })
+    })
+    
+    res.status(200).end()
+  })
+
+
   slack.rtm.on(RTM_EVENTS['MESSAGE'], function handleRtmMessage(message) {
-    bp.middlewares.sendIncoming({
-      platform: 'slack',
-      type: message.type,
-      user: message.user, //TODO Get user and save them to DB
-      text: message.text,
-      raw: message
+    
+    if (isFromBot(message)) return
+    
+    preprocessEvent(message)
+    .then(profile => {
+      bp.middlewares.sendIncoming({
+        platform: 'slack',
+        type: message.type,
+        user: profile,
+        text: message.text,
+        raw: formatRaw(message)
+      })
     })
   })
 
   slack.rtm.on(RTM_EVENTS['REACTION_ADDED'], function handleRtmReactionAdded(reaction) {
-    bp.middlewares.sendIncoming({
-      platform: 'slack',
-      type: reaction.type,
-      user: reaction.user, //TODO Get user and save them to DB
-      text: reaction.reaction,
-      raw: reaction
+    
+    if (isFromBot(reaction)) return
+
+    preprocessEvent(reaction)
+    .then(profile => {
+      bp.middlewares.sendIncoming({
+        platform: 'slack',
+        type: 'reaction',
+        user: profile,
+        text: profile.real_name + " reacted using " +reaction.reaction,
+        raw: formatRaw(reaction)
+      })
     })
   })
 
   slack.rtm.on(RTM_EVENTS['USER_TYPING'], function handleRtmTypingAdded(typing) {
-    bp.middlewares.sendIncoming({
-      platform: 'slack',
-      type: typing.type,
-      user: typing.user, //TODO Get user and save them to DB
-      text: typing.type,
-      raw: typing
+    if (isFromBot(typing)) return
+
+    preprocessEvent(typing)
+    .then(profile => {
+      bp.middlewares.sendIncoming({
+        platform: 'slack',
+        type: 'typing',
+        user: profile, 
+        text: profile.real_name + " is typing",
+        raw: formatRaw(typing)
+      })
     })
   })
 
   slack.rtm.on(RTM_EVENTS['FILE_SHARED'], function handleRtmTypingAdded(file) {
-    bp.middlewares.sendIncoming({
-      platform: 'slack',
-      type: file.type,
-      user: file.user_id, //TODO Get user and save them to DB
-      text: file.type,
-      raw: file
+    if (isFromBot(file)) return
+
+    preprocessEvent(file)
+    .then(profile => {
+      bp.middlewares.sendIncoming({
+        platform: 'slack',
+        type: 'file',
+        user: profile,
+        text: profile.real_name + " shared a file",
+        raw: formatRaw(file)
+      })
     })
   })
+
 
   OTHER_RTM_EVENTS.map((rtmEvent) => {
     slack.rtm.on(RTM_EVENTS[rtmEvent], function handleOtherRTMevent(event) {
       bp.middlewares.sendIncoming({
         platform: 'slack',
         type: event.type,
-        text: event.type,
+        text: "An another type of event occured",
         raw: event
-      })
+      })  
     })
   })
 }

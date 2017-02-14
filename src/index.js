@@ -48,7 +48,7 @@ module.exports = {
 
     bp.slack = {}
     _.forIn(actions, (action, name) => {
-      bp.slack[name] = actions
+      bp.slack[name] = actions[name]
       let sendName = name.replace(/^create/, 'send')
       bp.slack[sendName] = Promise.method(function() {
 

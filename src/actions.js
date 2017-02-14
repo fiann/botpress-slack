@@ -2,9 +2,9 @@
 
 const _ = require('lodash')
 
-const validateChannelId = (channelId) => {
-  if (!/\w+/.test(channelId)) {
-    throw new Error('Invalid channelId')
+const validateChannel = (channel) => {
+  if (!/\w+/.test(channel)) {
+    throw new Error('Invalid channel')
   }
 }
 
@@ -20,43 +20,73 @@ const validateAttachments = (attachments) => {
   }
 }
 
-const validateUrl = (url) => {
-  // if (typeof(url) !== 'string') {
-  //   throw new Error('Expected URL to be a string')
-  // }
-}
-
-const createText = (channelId, text) => {
-  validateChannelId(channelId)
+const createText = (channel, text, options = {}) => {
+  validateChannel(channel)
   validateText(text)
-
+  
   return {
     platform: 'slack',
     type: 'text',
     text: text,
     raw: {
-      to: channelId,
-      message: text
+      channel: channel,
+      options: options
     }
   }
 }
 
-const createAttachments = (channelId, text, attachments) => {
-  validateChannelId(channelId)
+const createAttachments = (channel, attachments, options = {}) => {
+  validateChannel(channel)
   validateAttachments(attachments)
 
   return {
     platform: 'slack',
     type: 'attachments',
-    text: 'Slack attachments (Array)',
+    text: 'App sent an attachments',
     raw: {
-      to: channelId,
-      attachments: attachments
+      channel: channel,
+      attachments: attachments,
+      options: options
     }
   }
 }
 
+const createUpdateText = (ts, channel, text, options = {}) => {
+  validateChannel(channel)
+  validateText(text)
+
+  return {
+    platform: 'slack',
+    type: 'update_text',
+    text: text,
+    raw: {
+      channel: channel,
+      ts: ts,
+      options: options
+    }
+  }
+} 
+
+const createUpdateAttachments = (ts, channel, attachments, options = {}) => {
+  validateChannel(channel)
+  validateAttachments(attachments)
+
+  return {
+    platform: 'slack',
+    type: 'update_attachments',
+    text: "App updated an attachments",
+    raw: {
+      channel: channel,
+      attachments: attachments,
+      ts: ts,
+      options: options
+    }
+  }
+} 
+
 module.exports = {
   createText,
-  createAttachments
+  createAttachments,
+  createUpdateText,
+  createUpdateAttachments
 }
