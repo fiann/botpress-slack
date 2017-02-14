@@ -177,9 +177,9 @@ module.exports = (bp, slack) => {
         raw.mentionnedUsers = mentionnedUsers
         bp.middlewares.sendIncoming({
           platform: 'slack',
-          type: 'users_mentionned',
+          type: 'users_mentioned',
           user: profile,
-          text: "Users have been mentionned",
+          text: "Users have been mentioned",
           raw: raw
         })
       }
