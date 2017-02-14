@@ -7,8 +7,11 @@ import {
   Col,
   Button,
   ControlLabel,
-  Link
+  Link,
+  Checkbox
 } from 'react-bootstrap'
+
+import _ from 'lodash'
 
 import style from './style.scss'
 
@@ -24,7 +27,8 @@ export default class SlackModule extends React.Component {
       hostname: '',
       scope: '',
       verificationToken: '',
-      apiToken: null
+      apiToken: null,
+      hashState: null
     }
   }
 
@@ -34,9 +38,6 @@ export default class SlackModule extends React.Component {
       this.authenticate()
     })
   }
-
-  // TODO handle error
-  // TODO add eslint about missing class methodp
 
   getAxios = () => this.props.bp.axios
   mApi = (method, url, body) => this.getAxios()[method]('/api/botpress-slack' + url, body)
@@ -54,7 +55,18 @@ export default class SlackModule extends React.Component {
         verificationToken: data.verificationToken,
         loading: false
       })
+
+      setImmediate(() => {
+        this.setState({
+          hashState: this.getHashState()
+        })
+      })
     })
+  }
+
+  getHashState = () => {
+    const values = _.omit(this.state, ['loading', 'hashState'])
+    return _.join(_.toArray(values), '_')
   }
 
   getRedictURI = () => {
@@ -97,11 +109,12 @@ export default class SlackModule extends React.Component {
     return this.getAxios().get(this.getOAuthTestLink())
     .then(({data}) => {
       if (data.ok) return true
-      console.log("You are not authenticate correctly, retry to authenticate again...")
-      return false
+
+      throw new Error("An error occured while testing of your API Token...")
     })
     .catch((err) => {
-      console.log("You are not authenticate: " + err)
+      console.log(err)
+      this.setState({ apiToken: null })
       return false
     })
   }
@@ -114,8 +127,7 @@ export default class SlackModule extends React.Component {
     this.getAxios().get(this.getOAuthAccessLink(code))
     .then(({data}) => {
       if (!data.ok) {
-        console.log("You encountered an error during authentification: " + data.error)
-        return
+        throw new Error("You encountered an error during authentification, the code doesn't seems to be valid...")
       }
 
       this.setState({
@@ -125,6 +137,9 @@ export default class SlackModule extends React.Component {
       setImmediate(() => {
         this.handleSaveConfig()
       })
+    })
+    .catch((err) => {
+      console.log(err)
     })
   }
 
@@ -146,13 +161,11 @@ export default class SlackModule extends React.Component {
       scope: this.state.scope
     })
     .then(({data}) => {
-      console.log("New configurations have been saved successfully.")
       this.fetchConfig()
     })
     .catch(err => {
-      console.log("An error occured while saving configurations...")
+      console.log(err)
     })
-    // TODO handle error and response
   }
 
   // ----- render functions -----
@@ -160,6 +173,7 @@ export default class SlackModule extends React.Component {
   renderHeader = title => (
     <div className={style.header}>
       <h4>{title}</h4>
+      {this.renderSaveButton()}
     </div>
   )
 
@@ -195,7 +209,7 @@ export default class SlackModule extends React.Component {
   }
 
   withNoLabel = (element) => (
-    <FormGroup>
+    <FormGroup >
       <Col smOffset={3} sm={7}>
         {element}
       </Col>
@@ -203,25 +217,43 @@ export default class SlackModule extends React.Component {
   )
 
   renderBtn = (label, handler) => (
-    <Button  onClick={handler}>{label}</Button>
+    <Button onClick={handler}>{label}</Button>
   )
 
-  renderLinkButton = (label, link) => (
+  renderLinkButton = (label, link, handler) => (
     <a href={link}>
-      <Button className={style.formButton}>
+      <Button className={style.formButton} onClick={handler}>
         {label}
       </Button>
     </a>
   )
 
-  renderAuthentificationButton = () => {
-    return this.withNoLabel(this.renderLinkButton('Authenticate', this.getOAuthLink()))
+  renderAuthentificationButton = () => { 
+    if (this.isAuthenticate()) {
+      return this.withNoLabel(this.renderLinkButton('Reset', this.getOAuthLink(), this.handleSaveConfig))
+    }
+
+    return this.withNoLabel(this.renderLinkButton('Authenticate', this.getOAuthLink(), this.handleSaveConfig))
   }
 
   renderApiToken = () => {
     return this.renderTextInput('API token', 'apiToken', {
       disabled: true
     })
+  }
+
+  renderSaveButton = () => {
+    let opacity = 0
+    if (this.state.hashState && this.state.hashState !== this.getHashState()) {
+      opacity = 1
+    }
+
+    return <Button
+        className={style.formButton}
+        style={{opacity: opacity}}
+        onClick={this.handleSaveConfig}>
+          Save
+      </Button>
   }
 
 
@@ -238,27 +270,21 @@ export default class SlackModule extends React.Component {
           placeholder: 'Paste your client secret here...'
         })}
     
+        {this.renderTextInput('Verification Token', 'verificationToken', {
+          placeholder: 'Paste your verification token here...'
+        })}      
 
         {this.renderTextInput('Hostname', 'hostname', {
-          placeholder: 'Select the scope here...'
+          placeholder: 'e.g. https://a9f849c4.ngrok.io',
         })}
 
-        {this.renderTextInput('Verification Token', 'verificationToken', {
-          placeholder: 'Select the scope here...'
-        })}
-    
-        // TODO: Change for a dropdown
         {this.renderTextInput('Scope', 'scope', {
-          placeholder: 'Select the scope here...'
+          placeholder: 'e.g. chat:write:bot,chat:write:user,dnd:read'
         })}
     
-        {!this.isAuthenticate()
-          ? this.renderAuthentificationButton()
-          : this.renderApiToken()}
-    
-        {this.withNoLabel(
-          this.renderBtn('Save', this.handleSaveConfig)
-        )}
+        {this.isAuthenticate() ? this.renderApiToken() : null }
+        
+        {this.renderAuthentificationButton()}
       </div>
     )
   }
@@ -266,8 +292,11 @@ export default class SlackModule extends React.Component {
 
   render() {
     if (this.state.loading) return null
-    return <Form horizontal>
-      {this.renderConfigSection()}
-    </Form>
+
+    return <Col md={10} mdOffset={1}>
+        <Form horizontal>
+          {this.renderConfigSection()}
+        </Form>
+      </Col>
   }
 }

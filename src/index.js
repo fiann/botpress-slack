@@ -110,7 +110,5 @@ module.exports = {
       setConfigAndRestart(req.body)
       res.json(config.getAll())
     })
-
-    router.get('/user/')
   }
 }

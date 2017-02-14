@@ -70,6 +70,8 @@ const OTHER_RTM_EVENTS = [
   "USER_CHANGE"
 ]
 
+const mentionRegex = new RegExp(/<@(\w+)>/gi)
+
 module.exports = (bp, slack) => {
 
   const users = Users(bp, slack)
@@ -153,16 +155,35 @@ module.exports = (bp, slack) => {
   slack.rtm.on(RTM_EVENTS['MESSAGE'], function handleRtmMessage(message) {
     
     if (isFromBot(message)) return
-    
     preprocessEvent(message)
     .then(profile => {
+      const raw = formatRaw(message)
+
       bp.middlewares.sendIncoming({
         platform: 'slack',
         type: message.type,
         user: profile,
         text: message.text,
-        raw: formatRaw(message)
+        raw: raw
       })
+
+      let mentionnedUsers = []
+      let match = []
+      while(match = mentionRegex.exec(message.text)) {
+        mentionnedUsers.push(match[1])
+      }
+
+      if (mentionnedUsers.length > 0) {
+        raw.mentionnedUsers = mentionnedUsers
+        bp.middlewares.sendIncoming({
+          platform: 'slack',
+          type: 'users_mentionned',
+          user: profile,
+          text: "Users have been mentionned",
+          raw: raw
+        })
+      }
+      
     })
   })
 
@@ -215,6 +236,7 @@ module.exports = (bp, slack) => {
 
   OTHER_RTM_EVENTS.map((rtmEvent) => {
     slack.rtm.on(RTM_EVENTS[rtmEvent], function handleOtherRTMevent(event) {
+      console.log(event)
       bp.middlewares.sendIncoming({
         platform: 'slack',
         type: event.type,
