@@ -51,6 +51,12 @@ class Slack {
     }  
   }
 
+  validateBeforeReaction (options) {
+    if (!(options.file || options.file_comment || options.channel || options.timestamp)) {
+      throw new Error("You need to set at least a destination options (file, file_comment, channel, timestamp)...")
+    }
+  }
+
   validateBeforeSending(channelId, options) {
     this.validateConnection()
     this.validateChannelId(channelId)
@@ -75,6 +81,14 @@ class Slack {
     })
   }
 
+  sendDeleteTextOrAttachments(ts, channelId, options) {
+    this.validateBeforeSending(channelId, options)
+
+    return Promise.fromCallback(cb => {
+      this.web.chat.delete(ts, channelId, options, cb)
+    })
+  }
+
   sendAttachments(channelId, attachments, options) {
     this.validateBeforeSending(channelId, options)
     this.validateAttachments(attachments)
@@ -96,6 +110,24 @@ class Slack {
         attachments,
         ...options
       }, cb)
+    })
+  }
+
+  sendReaction(name, options) {
+    this.validateConnection()
+    this.validateBeforeReaction(options)
+
+    return Promise.fromCallback(cb => {
+      this.web.reactions.add(name, options, cb)
+    })
+  }
+
+  sendRemoveReaction(name, options) {
+    this.validateConnection()
+    this.validateBeforeReaction(options)
+
+    return Promise.fromCallback(cb => {
+      this.web.reactions.remove(name, options, cb)
     })
   }
 
@@ -124,17 +156,16 @@ class Slack {
       .catch(err => console.log(`Error getting user profile: ${err}`))
   }
 
-  connectRTM(bp, apiToken) {
-    if (this.connected) {
+  connectRTM(bp, rtmToken) {
+    if (this.rtm) {
       this.disconnect()
     }
 
-    this.rtm = new RtmClient(apiToken)
+    this.rtm = new RtmClient(rtmToken)
 
     this.rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
       bp.logger.info('slack connector is authenticated')
       this.data = rtmStartData
-      this.channels = this.data.channels
     })
 
     this.rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
@@ -150,14 +181,42 @@ class Slack {
     this.web = new WebClient(apiToken)
   }
 
+  getRTMToken() {
+    const botToken = this.config.botToken.get()
+    return botToken ? botToken : this.config.apiToken.get()
+  }
+
+  getBotId() {
+    return this.data && this.data.self.id
+  }
+
+  getBotName() {
+    return this.data && this.data.self.name
+  }
+
+  getChannels() {
+    return this.data && this.data.channels
+  }
+
+  getTeam() {
+    return this.data && this.data.team
+  }
+
+  getUsers() {
+    return this.data && this.data.users
+  }
+
+  getData() {
+    return this.data
+  }
 
   connect(bp) {
-    const apiToken = this.config.apiToken.get()
+    const rtmToken = this.getRTMToken()
 
-    if(!apiToken) return
+    if(!rtmToken) return
 
-    this.connectRTM(bp, apiToken)
-    this.connectWebclient(apiToken)
+    this.connectRTM(bp, rtmToken)
+    this.connectWebclient(rtmToken)
   }
 
   disconnect() {
