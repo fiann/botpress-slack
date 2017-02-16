@@ -22,49 +22,49 @@ Settings can also be set programmatically by providing the settings in the `${mo
 
 <img alt='Connexion settings' src='assets/connexion-settings.png' width='700px'/>
 
-##### 1. Setup Hostname
+#### 1. Setup Hostname
 
 You need to manually enter your hostname. If you are developping locally, we suggest using [ngrok](#ngrok) to deploy your chatbot ([learn more about ngrok]((https://ngrok.com))
 
-##### 2. Create a [**Slack app**](https://api.slack.com/apps?new_app=1)
+#### 2. Create a [**Slack app**](https://api.slack.com/apps?new_app=1)
   
 <img alt='Create app' src='/assets/create-app-slack.png' width='450px' />
 
-##### 3. Get Client ID and Client Secret
+#### 3. Get Client ID and Client Secret
 
 These information are available on **Basic Information** of you app. You only need to copy them in module interface.
 
 <img alt='Client id and client secret' src='/assets/client-id-client-secret.png' width='500px' />
 
-##### 4. Setup OAuth & Permissions
+#### 4. Setup OAuth & Permissions
 
 On the **OAuth & Permissions** page of your slack app, you need to enter your redirect url for the authentification. The redirect url need to be `${hostname}/modules/botpress-slack` as you can see in the example screenshot below.
 
 <img alt='OAuth settings' src='/assets/oauth.png' width='500px;' />
 
-##### 5. Create a Bot User
+#### 5. Create a Bot User
 
-On the **Bot Users** page of your slack app, you need to add a **Bot User** by clicking on **Add a Bot User**. We suggest you to turn on **Always Show My Bot as Online** for be able to use RTM API correctly.
+On the **Bot Users** page of your slack app, you need to add a Bot User by clicking on **Add a Bot User**. We suggest you to turn on **Always Show My Bot as Online** for be able to use RTM API correctly.
 
 <img alt='Bot users' src='/assets/bot-user.png' width='500px;' />
 
-##### 6. Setup Interactive Messages
+#### 6. Setup Interactive Messages
 
 On the **Interactive messages** page of your slack app, you need to **Enable Interactive Messages** and add a **Request URL**. The URL entered needs to be format as `${hostname}/api/botpress-slack/action-endpoint`.
 
 <img alt='Interactive messages' src='/assets/interactive-messages.png' width='500px;' />
 
-##### 7. Get Verification Token
+#### 7. Get Verification Token
 
 The verification token should appear below App Id and App  information are available on **Basic Information** of you app. You only need to copy them in module interface.
 
 <img alt='App id and app secret' src='/assets/verification-token.png' width='500px' />
 
-##### 8. Set scope
+#### 8. Set scope
 
 On your configuration page of your module, you need to set scope of your bot. We suggest you to keep the default configuration (**admin,bot,chat:write:bot,commands,identify,incoming-webhook**), but if you want to want to modify it, we suggest you to look to the [documentation](https://api.slack.com/docs/oauth-scopes).
 
-##### 9. Authenticate & Connect
+#### 9. Authenticate & Connect
 
 Next step is to authenticate and connect your bot. To do it, you only need to click on **Authenticate & Connect** on your module and follow the steps. Once it will be done, you should received an **API Token** and a **Bot Token**. They will appear on your settings page of your module.
 
@@ -84,6 +84,7 @@ If you want to have more information about documentation, options and API, we su
 * [File](#file)
 * [User mention](#user-mention)
 * [Bot mention](#bot-mention)
+* [Others](#others)
 * [Direct message](#direct-message)
 * [Validation](#validation)
 
@@ -97,54 +98,82 @@ If you want to have more information about documentation, options and API, we su
 
 ### Incoming
 
-You can listen to incoming event easily with Botpress by using `bp` built-in `hear` function. You only need to listen to specific Messenger event to be able to react to user's actions.
+You can listen to incoming event easily with Botpress by using `bp` built-in `hear` function. You only need to listen to specific Slack event to be able to react to user's actions.
 
 ```js
-bp.hear({ platform: 'facebook', type: 'postback', text: 'GET_STARTED' }, (event, next) => {
-      bp.messenger.pipeText(event.user.id, 'Welcome on Botpress!!!')
+bp.hear({ platform: 'facebook', type: 'message', text: 'Hello' }, (event, next) => {
+      bp.slack.sendText(event.channel.id, 'Welcome on Botpress!!!')
    }
 })
 ```
 
-In fact, this module preprocesses almost all types of message (message, attachment, postback, quick_reply, delivery, read, optin, referrals...) and send them to incoming middlewares. When you build a bot or a module, you can access to all information about incoming messages that have been send to  middlewares.
+In fact, this module preprocesses almost all types of message (message, reaction, attachments, file, typing...) and send them to incoming middlewares. When you build a bot or a module, you can access to all information about incoming messages that have been send to  middlewares.
 
 ```js
 bp.middlewares.sendIncoming({
-   platform: 'facebook',
-   type: 'message',
-   user: profile,
-   text: e.message.text,
-   raw: e
+		platform: 'slack',
+		type: 'message',
+		text: 'Text message here... (e.g. Hello world)'
+		user: [Object],
+		channel: { id: 'D45FHSDEW' },
+		ts: '1487273756.000116',
+		direct: true,
+		raw: [Object]
 })
 ```
 
 #### Profile
 
-You can acces to all user's profile information by using this module. A cache have been implemented to fetch all information about users and this information is sent to middlewares.
+You can acces to all user's profile information (`event.user`) by using this module. A cache have been implemented to fetch all information about users and this information is sent to middlewares.
 
 ```js
 {
-  id: profile.id,
-  platform: 'facebook',
-  gender: profile.gender,
-  timezone: profile.timezone,
-  locale: profile.locale
+  "id": "U023BECGF",
+  "team_id": "T021F9ZE2",
+  "name": "bobby",
+  "deleted": false,
+  "status": null,
+  "color": "9f69e7",
+  "real_name": "Bobby Tables",
+  "tz": "America\/Los_Angeles",
+  "tz_label": "Pacific Daylight Time",
+  "tz_offset": -25200,
+  "profile": {
+      "avatar_hash": "ge3b51ca72de",
+      "first_name": "Bobby",
+      "last_name": "Tables",
+      "real_name": "Bobby Tables",
+      "email": "bobby@slack.com",
+      "skype": "my-skype-name",
+      "phone": "+1 (123) 456 7890",
+      "image_24": "https:\/\/...",
+      "image_32": "https:\/\/...",
+      "image_48": "https:\/\/...",
+      "image_72": "https:\/\/...",
+      "image_192": "https:\/\/..."
+  },
+  "is_admin": true,
+  "is_owner": true,
+  "has_2fa": false
 }
 ```
 
 **Note**: All new users are automatically saved by this module in Botpress built-in database (`bp.db`).
 
-#### Text messages
+#### Text
 
 An `event` is sent to middlewares for each incoming text message from Messenger platform with all specific information.
 
 ```js
 {
-  platform: 'facebook',
-  type: 'message',
-  user: profile,
-  text: e.message.text,
-  raw: e
+  platform: 'slack',
+	type: 'message',
+	text: 'Text message here... (e.g. Hello world)',
+	user: [Object],
+	channel: { id: 'D45FHSDEW' },
+	ts: '1487273756.000116',
+	direct: true,
+	raw: [Object]
 }
 ```
 
@@ -154,113 +183,116 @@ Then, you can listen easily to this `event` in your module or bot
 bp.hear('hello')
 ```
 
-#### Postbacks
+#### Reaction
 
 ```js
 {
-  platform: 'facebook',
-  type: 'postback',
-  user: profile,
-  text: e.postback.payload,
-  raw: e
+  platform: 'slack',
+	type: 'reaction',
+	text: 'Dany Fortin-Simard reacted using wink',
+	user: [Object],
+	reaction: 'wink',
+	channel: { id: 'D45FHSDEW' },
+	ts: '1487273756.000116',
+	direct: true,
+	raw: [Object]
 }
 ```
 
-#### Attachments
-
-The original attachments messenger event. May contain multiple attachments. Individual attachments are also emmited individually (see Image, Video, File below)
+#### Typing
 
 ```js
 {
-  platform: 'facebook',
-  type: 'attachments',
-  user: profile,
-  text: e.message.attachments.length,
-  raw: e
+  platform: 'slack',
+	type: 'typing',
+	text: 'Sylvain Perron is typing',
+	user: [Object],
+	channel: { id: 'D45FHSDEW' },
+	ts: '1487273756.000116',
+	direct: true,
+	raw: [Object]
 }
 ```
 
-##### Image
-
-Individual Attachment extracted from the Attachments event.
-
-Note that Stickers, Thumbs Up, GIFs and Pictures are considered images too.
-
-```js
-{
-  platform: 'facebook',
-  type: 'image', // Same for 'video', 'file' and 'audio'
-  user: profile,
-  text: 'http://www.image.url',
-  raw: { type: 'image', payload: { url: '...' }}
-}
-```
-
-##### Audio
-##### Video
 ##### File
 
-Same signature as `Image` above.
-
-#### Referrals
-
 ```js
 {
-  platform: 'facebook',
-  type: 'referral',
-  user: profile,
-  text: e.referral.ref,
-  raw: e
+  platform: 'slack',
+	type: 'file',
+	text: 'Justin Watson shared a file',
+	user: [Object],
+	file: [Object],
+	channel: { id: 'D45FHSDEW' },
+	ts: '1487273756.000116',
+	direct: true,
+	raw: [Object]
 }
 ```
 
-#### Quick Replies
+#### User mentioned
+
+This event is emitted each time a user mentions another user in a message.
 
 ```js
 {
-  platform: 'facebook',
-  type: 'quick_reply',
-  user: profile,
-  text: e.message.quick_reply.payload,
-  raw: e
+  platform: 'slack',
+	type: 'user_mentioned',
+	text: 'User has been mentioned',
+	user: [Object],
+	mentionedId: 'U41H4NB9N',
+	channel: { id: 'D45FHSDEW' },
+	ts: '1487273756.000116',
+	direct: true,
+	raw: [Object]
 }
 ```
 
-#### Optins
+#### Bot mentioned
+
+Bot mentioned is send to incoming middlewares when your bot is mentioned in a message.
 
 ```js
 {
-  platform: 'facebook',
-  type: 'optin',
-  user: profile,
-  text: e.optin.ref,
-  raw: e
+  platform: 'slack',
+	type: 'bot_mentioned',
+	text: 'Bot has been mentioned',
+	user: [Object],
+	mentionedId: 'U41H4NB9N',
+	channel: { id: 'D45FHSDEW' },
+	ts: '1487273756.000116',
+	direct: true,
+	raw: [Object]
 }
 ```
 
-#### Delivery
+#### Other
+
+Slack connector also receives all other events that come from Real Time Messaging API. You can look at the [documentation](https://api.slack.com/rtm) to have more information about some specific event. 
 
 ```js
 {
-  platform: 'facebook',
-  type: 'delivery',
-  user: profile,
-  text: e.delivery.watermark,
-  raw: e
+  platform: 'slack',
+	type: 'other_types',
+	text: 'An another type of event occured',
+	raw: [Object]
 }
 ```
 
-#### Read
+#### Direct message
 
-```js
+As you can see in all incoming events, we added a particular field `direct` to differentiate message that comes from channel or direct.
+
+```
 {
-  platform: 'facebook',
-  type: 'read',
-  user: profile,
-  text: e.read.watermark,
-  raw: e
+	direct: false
 }
 ```
+
+#### Validation
+
+This module also comes with some validation to be certain that events are coming from Slack API. For that, each incoming event are validated using your verification token.
+
 
 ### Outgoing
 

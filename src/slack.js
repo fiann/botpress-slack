@@ -3,6 +3,7 @@ import incoming from './incoming'
 
 import axios from 'axios'
 import Promise from 'bluebird'
+import _ from 'lodash'
 
 class Slack {
   constructor(bp, config) {
@@ -139,22 +140,27 @@ class Slack {
     return this.data
   }
 
+
   getUserProfile(userId) {
-    const url = "https://slack.com/api/users.profile.get" +
-      "?token=" + this.config.apiToken.get() +
-      "&user=" + userId +
-      "&includes_labels=true"
+    const user = _.find(this.getUsers(), _.matchesProperty('id', userId))
+
+    if (user !== 'undefined') return Promise.resolve(user)
+
+    const url = "https://slack.com/api/users.list" +
+      "?token=" + this.config.apiToken.get()
 
     return axios.get(url)
-      .then(({data}) => {
-        if (!data.ok) {
-          throw new Error("Error getting user profile:" + userId )
-        }
+    .then(({data}) => {
+      if (!data.ok) {
+        throw new Error("Error getting user profile:" + userId )
+      }
 
-        return data.profile
-      })
-      .catch(err => console.log(`Error getting user profile: ${err}`))
-  }
+      this.data.users = data.members
+
+      return _.find(data.members, _.matchesProperty('id', userId))
+    })
+    .catch(err => console.log(`Error getting user profile: ${err}`))
+  } 
 
   connectRTM(bp, rtmToken) {
     if (this.rtm) {
@@ -166,6 +172,7 @@ class Slack {
     this.rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
       bp.logger.info('slack connector is authenticated')
       this.data = rtmStartData
+      console.log(rtmStartData)
     })
 
     this.rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {

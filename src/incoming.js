@@ -151,12 +151,12 @@ module.exports = (bp, slack) => {
     }
 
     preprocessEvent(payload)
-    .then(profile => {
+    .then(user => {
       bp.middlewares.sendIncoming({
         platform: 'slack',
         type: 'button',
-        text: profile.real_name + " clicked on a button",
-        user: profile,
+        text: user.profile.real_name + " clicked on a button",
+        user: user,
         channel: payload.channel,
         button: payload.actions[0],
         ts: payload.message_ts,
@@ -170,16 +170,16 @@ module.exports = (bp, slack) => {
 
 
   slack.rtm.on(RTM_EVENTS['MESSAGE'], function handleRtmMessage(message) {
-    
+
     if (isFromBot(message)) return
 
     preprocessEvent(message)
-    .then(profile => {
+    .then(user => {
 
       bp.middlewares.sendIncoming({
         type: 'message',
         text: message.text,
-        user: profile,
+        user: user,
         ...extractBasics(message)
       })
 
@@ -190,7 +190,7 @@ module.exports = (bp, slack) => {
           bp.middlewares.sendIncoming({
             type: 'bot_mentioned',
             text: "Bot has been mentioned",
-            user: profile,
+            user: user,
             mentionedId: mentionedId,
             ...extractBasics(message)
           })
@@ -198,7 +198,7 @@ module.exports = (bp, slack) => {
           bp.middlewares.sendIncoming({
             type: 'user_mentioned',
             text: "User has been mentioned",
-            user: profile,
+            user: user,
             mentionedId: mentionedId,
             ...extractBasics(message)
           })
@@ -212,11 +212,12 @@ module.exports = (bp, slack) => {
     if (isFromBot(reaction)) return
 
     preprocessEvent(reaction)
-    .then(profile => {
+    .then(user => {
       bp.middlewares.sendIncoming({
         type: 'reaction',
-        user: profile,
-        text: profile.real_name + " reacted using " + reaction.reaction,
+        user: user,
+        text: user.profile.real_name + " reacted using " + reaction.reaction,
+        reaction: reaction.reaction,
         ...extractBasics(reaction),
         ts: reaction.event_ts
       })
@@ -228,11 +229,11 @@ module.exports = (bp, slack) => {
     if (isFromBot(typing)) return
 
     preprocessEvent(typing)
-    .then(profile => {
+    .then(user => {
       bp.middlewares.sendIncoming({
         type: 'typing',
-        user: profile,
-        text: profile.real_name + " is typing",
+        user: user,
+        text: user.profile.real_name + " is typing",
         ...extractBasics(typing)
       })
     })
@@ -243,12 +244,12 @@ module.exports = (bp, slack) => {
     if (isFromBot(file)) return
     
     users.getOrFetchUserProfile(file.user_id)
-    .then(profile => {
+    .then(user => {
       bp.middlewares.sendIncoming({
         platform: 'slack',
         type: 'file',
-        user: profile,
-        text: profile.real_name + " shared a file",
+        user: user,
+        text: user.profile.real_name + " shared a file",
         file: file.file,
         ts: file.event_ts,
         raw: file
