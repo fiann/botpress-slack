@@ -6,7 +6,7 @@ This module has been built to accelerate and facilitate development of Slack bot
 
 ## Installation
 
-Installing modules on Botpress is simple. By using CLI, users only need to type this command in their terminal to add messenger module to their bot.
+Installing modules on Botpress is simple. By using CLI, users only need to type this command in their terminal to add slack module to their bot.
 
 ```js
 botpress install slack
@@ -90,9 +90,22 @@ If you want to have more information about documentation, options and API, we su
 
 ### Outgoing
 
-* [Text](#text-messages)
+* [Text](#text)
 * [Attachments](#attachments)
 * [Reaction](#reaction)
+* [Update text](#update-text)
+* [Update attachments](#update-attachments)
+* [Delete text or attachments](#delete-text-or-attachments)
+* [Remove reaction](#remove-reaction)
+
+### API
+
+* Status
+* User
+* Users
+* Channels
+* Team
+* Data
 
 ## Reference
 
@@ -101,7 +114,7 @@ If you want to have more information about documentation, options and API, we su
 You can listen to incoming event easily with Botpress by using `bp` built-in `hear` function. You only need to listen to specific Slack event to be able to react to user's actions.
 
 ```js
-bp.hear({ platform: 'facebook', type: 'message', text: 'Hello' }, (event, next) => {
+bp.hear({ platform: 'slack', type: 'message', text: 'Hello' }, (event, next) => {
       bp.slack.sendText(event.channel.id, 'Welcome on Botpress!!!')
    }
 })
@@ -111,14 +124,14 @@ In fact, this module preprocesses almost all types of message (message, reaction
 
 ```js
 bp.middlewares.sendIncoming({
-		platform: 'slack',
-		type: 'message',
-		text: 'Text message here... (e.g. Hello world)'
-		user: [Object],
-		channel: { id: 'D45FHSDEW' },
-		ts: '1487273756.000116',
-		direct: true,
-		raw: [Object]
+	platform: 'slack',
+	type: 'message',
+	text: 'Text message here... (e.g. Hello world)'
+	user: [Object],
+	channel: { id: 'D45FHSDEW' },
+	ts: '1487273756.000116',
+	direct: true,
+	raw: [Object]
 })
 ```
 
@@ -162,7 +175,7 @@ You can acces to all user's profile information (`event.user`) by using this mod
 
 #### Text
 
-An `event` is sent to middlewares for each incoming text message from Messenger platform with all specific information.
+An `event` is sent to middlewares for each incoming text message from Slack platform with all specific information.
 
 ```js
 {
@@ -214,7 +227,7 @@ bp.hear('hello')
 }
 ```
 
-##### File
+#### File
 
 ```js
 {
@@ -232,7 +245,7 @@ bp.hear('hello')
 
 #### User mentioned
 
-This event is emitted each time a user mentions another user in a message.
+User mentioned is sent each time a user mentions another user in a message.
 
 ```js
 {
@@ -250,7 +263,7 @@ This event is emitted each time a user mentions another user in a message.
 
 #### Bot mentioned
 
-Bot mentioned is send to incoming middlewares when your bot is mentioned in a message.
+Bot mentioned is sent to incoming middlewares when your bot is mentioned in a message.
 
 ```js
 {
@@ -293,10 +306,9 @@ As you can see in all incoming events, we added a particular field `direct` to d
 
 This module also comes with some validation to be certain that events are coming from Slack API. For that, each incoming event are validated using your verification token.
 
-
 ### Outgoing
 
-By using our module, you can send anything you want to your users on Messenger. In fact, this module support all types of messenge that are available on Facebook (text, images, videos, audios, webviews...).
+By using our module, you can send anything you want to your users on Slack. In fact, this module support most important types of messenge that are available on Slack (text, attachments, button, reaction).
 
 #### Creating actions without sending them
 
@@ -304,213 +316,245 @@ Note that all the below actions are available under two format: `send___` and `c
 
 ```js
   // This message won't be sent
-  const message = bp.messenger.createText(event.user.id, 'What is your name?')
+  const message = bp.slack.createText(event.channel.id, 'What is your name?')
   // But `message` is a fully formed middleware event object, ready to be sent
   // example using the botpress-botkit module
   convo.ask(message, function(response, convo) { /* ... */ })
 ```
 
-### Text messages
+### Text
 
-In code, it is simple to send a message text to a specific users ([facebook doc](https://developers.facebook.com/docs/messenger-platform/send-api-reference/text-message)).
+In code, it is simple to send a message text to a specific channel ([slack doc](https://api.slack.com/methods/chat.postMessage)).
 
-#### `sendText(userId, text, [options])` -> Promise
+#### `sendText(channel, text, [options])` -> Promise
 
 ##### Arguments
 
-1. ` userId ` (_String_): Correspond to unique Messenger's recipient identifier. Usually, this `recipient_id` is available from input message.
+1. ` channelId ` (_String_): Correspond to unique Channel's recipient identifier. Usually, this `channelId` is available from input message.
 
-2. ` text ` (_String_): Text message that will be send to user.
+2. ` text ` (_String_): Text message that will be send to channel.
 
-3. ` options ` (_Object_): An object that may contain:
-- `quick_replies` which is an array of quick replies to attach to the message
-- `typing` indicator. true for automatic timing calculation or a number in milliseconds (turns off automatically)
-- `waitDelivery` the returning Promise will resolve only when the message is delivered to the user
-- `waitRead` the returning Promise will resolve only when the user reads the message
+3. ` options ` (_Object_): An object that may contain possible options for normal `chat.postMessage` (see [documentation](https://api.slack.com/methods/chat.postMessage) for more details)
 
 ##### Returns
 
-(_Promise_): Send to outgoing middlewares a formatted `Object` than contains all information (platform, type, text, raw) about the text message that needs to be sent to Messenger platform. The promise resolves when the message was successfully sent to facebook, except if you set the `waitDelivery` or `waitRead` options.
+(_Promise_): Send to outgoing middlewares a formatted `Object` than contains all information (platform, type, text, raw) about the text message that needs to be sent to Slack platform. The promise resolves when the message was successfully sent to slack.
 
 ##### Example
 
 ```js
-const userId = 'USER_ID'
-const text = "Select between these two options?"
-const options = {
-  quick_replies: [
-    {
-      content_type: "text",
-      title: "Option 1",
-      payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_OPTION_1"
-    },
-    {
-      content_type:"text",
-      title:"Option 2",
-      payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_OPTION_2"
-    }
-  ],
-  typing: true,
-  waitRead: true
-}
+bp.hear({ platform: 'slack', text: 'Hello'}, event => {
+	const channelId = event.channel.id
+	const text = 'Hello human!'
 
-bp.messenger.sendText(userId, text, options)
-.then(() => {
-  // the message was read because of `waitRead` option  
+	bp.slack.sendText(channelId, text)
+	.then(() => {
+		//Do something else
+	})
 })
+
 ```
 
 ### Attachments
 
-By using this function, you can send any type of attachment to your users ([facebook doc](https://developers.facebook.com/docs/messenger-platform/send-api-reference/contenttypes)).
+By using this function, you can send any type of attachment to your users ([slack doc](https://api.slack.com/docs/message-formatting). Also, you should look to the [message builder](https://api.slack.com/docs/messages/builder) to have a better idea of all possible attachments you can send.
 
-#### `sendAttachment(userId, type, url, [options])` -> Promise
+#### `sendAttachments(channelId, attachments, [options])` -> Promise
 
 ##### Arguments
 
-1. ` userId ` (_String_): Correspond to unique Messenger's recipient identifier
+1. ` channelId ` (_String_): Correspond to unique Channel's recipient identifier. Usually, this `channelId` is available from input message.
 
-2. ` type ` (_String_): Specific type of  attachment can be `'audio'`, `'file'`, `'image'` or `'video'`
+2. ` attachments ` (_Array_): An array of attachments to be sent.
 
-3. ` url ` (_String_): Correspond to specific url of the attachment that need to be sent.
-
-4. ` options ` (_Object_): An object that may contain:
-- `quick_replies`
-- `typing`
-- `waitDelivery` the returning Promise will resolve only when the message is delivered to the user
-- `waitRead` the returning Promise will resolve only when the user reads the message
+3. ` options ` (_Object_): An object that may contain possible options for normal `chat.postMessage` (see [documentation](https://api.slack.com/methods/chat.postMessage) for more details)
 
 ##### Returns
 
-(_Promise_): Send to outgoing middlewares a formatted `Object` than contains all information (platform, type, text, raw) about the attachment that needs to be sent to Messenger platform.
+(_Promise_): Send to outgoing middlewares a formatted `Object` than contains all information (platform, type, text, raw) about the attachment that needs to be sent to Slack platform.
 
 ##### Example
 
 ```js
-const userId = 'USER_ID'
-const type = 'image'
-const url = 'https://github.com/botpress/botpress/blob/master/images/botpress-dark.png?raw=true'
-
-bp.messenger.sendAttachment(userId, type, url)
+bp.slack.sendAttachments(event.channel.id, [
+  {
+    "title": "The Further Adventures of Slackbot",
+    "fields": [
+      {
+        "title": "Volume",
+        "value": "1",
+        "short": true
+      },
+      {
+        "title": "Issue",
+        "value": "3",
+				"short": true
+      }
+    ],
+    "author_name": "Stanford S. Strickland",
+    "author_icon": "http://a.slack-edge.com/7f18https://a.slack-edge.com/bfaba/img/api/homepage_custom_integrations-2x.png",
+    "image_url": "http://i.imgur.com/OJkaVOI.jpg?1"
+  },
+  {
+    "title": "Synopsis",
+    "text": "After @episod pushed exciting changes to a devious new branch back in Issue 1, Slackbot notifies @don about an unexpected deploy..."
+  },
+  {
+    "fallback": "Would you recommend it to customers?",
+    "title": "Would you recommend it to customers?",
+    "callback_id": "comic_1234_xyz",
+    "color": "#3AA3E3",
+    "attachment_type": "default",
+    "actions": [
+      {
+        "name": "recommend",
+        "text": "Recommend",
+        "type": "button",
+        "value": "recommend"
+      },
+      {
+        "name": "no",
+        "text": "No",
+        "type": "button",
+        "value": "bad"
+      }
+    ]
+  }
+])
 ```
 
-### Templates
+### Reaction
 
-By using this module, it's easy to send any type of supported template to your users ([facebook doc](https://developers.facebook.com/docs/messenger-platform/send-api-reference/templates)).
+By using this module, it's easy to send any type of reaction on previous message ([slack doc](https://api.slack.com/methods/reactions.add)).
 
-#### `sendTemplate(userId, payload, [options])` -> Promise
+#### `bp.slack.sendReaction(name, options)` -> Promise
 
 ##### Arguments
 
-1. ` userId ` (_String_): Correspond to unique Messenger's recipient identifier
-
-2. ` payload ` (_Object_): Specific `payload` object for your selected template. Actually, many types of template (button, generic, list, receipt...) are supported by Messenger.
-
-3. ` options ` (_Object_): An object that may contains:
-- `typing`
-- `waitDelivery` the returning Promise will resolve only when the message is delivered to the user
-- `waitRead` the returning Promise will resolve only when the user reads the message
+1. ` name ` (_String_): Correspond to the name of the reaction
+2. ` options ` (_Object_): An object that may contains:
+- `channel`: Correspond to unique Channel's where you want to react. Usually, this `channel` is available from previous message. (**required** to reaction to text or attachments)
+- `timestamp`: Correspond to unique timestamp of the message. Usually, this `ts` is available from previous message. (**required** to reaction to text or attachments)
+- `file` Correspond to the file to add reaction to.
+- `file_comment` File comment to add reaction to.
 
 ##### Returns
 
-(_Promise_): Send to outgoing middlewares a formatted `Object` than contains all information (platform, type, text, raw) about the template that needs to be sent.
+(_Promise_): Send to outgoing middlewares a formatted `Object` than contains all information (platform, type, text, raw) about the reaction that needs to be sent.
 
 ##### Example
 
 ```js
-const userId = 'USER_ID'
-const payload = {
-    template_type: "button",
-    text: "Have you seen our awesome website?",
-    buttons: [
-        {
-            type: "web_url",
-            url: "https://www.botpress.io",
-            title: "Show Website"
-        }
-    ]
-}
-
-bp.messenger.sendTemplate(userId, payload, { typing: 2000 })
+bp.hear({ platform: 'slack', text:'I love you'}, event => {
+	bp.slack.sendReaction('kissing_smiling_eyes', { channel: event.channel.id, timestamp: event.ts })
+}) 
 ```
 
-#### Quick replies
-By using `options` argument, you can easily add quick replies to text messages or attachments.
+### Update text
 
-```js
-const options = {
-    quick_replies: [
-        {
-            content_type :"text",
-            title: "Option",
-            payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_OPTION"
-        }
-    ]
-}
-```
+In code, it is simple to update a message text on a specific channel ([slack doc](https://api.slack.com/methods/chat.update)).
 
-#### Automatic typing indicator
+#### `sendUpdateText(ts, channel, text, [options])` -> Promise
 
-As quick replies, you can add an automatic typing indicator to your messages by adding `typing` to `options` argument.
+##### Arguments
+1. ` ts ` (_String_): Correspond to unique timestamp of the message. Usually, this `ts` is available from previous message.
 
-```js
-const options = { typing: true }
-```
+2. ` channelId ` (_String_): Correspond to unique Channel's recipient identifier. Usually, this `channelId` is available from input message.
+
+3. ` text ` (_String_): Text message that will be send to channel.
+
+4. ` options ` (_Object_): An object that may contain possible options for normal `chat.update` (see [documentation](https://api.slack.com/methods/chat.update) for more details)
+
+##### Returns
+
+(_Promise_): Send to outgoing middlewares a formatted `Object` than contains all information (platform, type, text, raw) about the text message that needs to be sent to Slack platform. The promise resolves when the message was successfully sent to slack.
 
 
-#### Postbacks
+### Update attachments
 
-This module support postbacks. Postbacks occur when a Postback button, Get Started button, Persistent menu or Structured Message is tapped ([facebook doc](https://developers.facebook.com/docs/messenger-platform/webhook-reference/postback)).
+By using this function, you can update any type of attachment on a specific channel ([slack doc](https://api.slack.com/methods/chat.update).
 
-#### Referrals
+#### `sendUpdateAttachments(ts, channelId, attachments, [options])` -> Promise
 
-This module also support referrals. In fact, the value of the `ref` parameter is passed by the server via webhook and we are able to access these referrals in parameters of input messages ([facebook doc](https://developers.facebook.com/docs/messenger-platform/webhook-reference/referral)).
+##### Arguments
+1. ` ts ` (_String_): Correspond to unique timestamp of the message. Usually, this `ts` is available from previous message.
 
-#### Display Get Started
+2. ` channelId ` (_String_): Correspond to unique Channel's recipient identifier. Usually, this `channelId` is available from input message.
 
-To active get started button on Messenger, users can modify display setting directly in user interface ([facebook doc](https://developers.facebook.com/docs/messenger-platform/thread-settings/get-started-button)).
+3. ` attachments ` (_Array_): An array of attachments to be sent.
 
-<img alt='Get started button' src='/assets/display-get-started.png' width='600px' />
+4. ` options ` (_Object_): An object that may contain possible options for normal `chat.update` (see [documentation](https://api.slack.com/methods/chat.update) for more details)
+
+##### Returns
+
+(_Promise_): Send to outgoing middlewares a formatted `Object` than contains all information (platform, type, text, raw) about the attachment that needs to be sent to Slack platform.
 
 
-#### Greeting message
+### Delete text or attachments
 
-Directly in module view, users are able to modify greeting message ([facebook doc](https://developers.facebook.com/docs/messenger-platform/thread-settings/greeting-text)).
+By using this function, you can delete any type of text or attachments on a channel ([slack doc](https://api.slack.com/methods/chat.delete).
 
+#### `sendDeleteTextOrAttachments(ts, channelId, [options])` -> Promise
 
-<img alt='Greeting message' src='/assets/greeting-message.png' width='600px' />
+##### Arguments
+1. ` ts ` (_String_): Correspond to unique timestamp of the message. Usually, this `ts` is available from previous message.
 
-#### Persistent menu
+2. ` channelId ` (_String_): Correspond to unique Channel's recipient identifier. Usually, this `channelId` is available from input message.
 
-Users can directly modify persistent menu in module user interface. By using UI, it's possible to add, modify and remove items \([facebook doc](https://developers.facebook.com/docs/messenger-platform/thread-settings/persistent-menu)\).
+3. ` options ` (_Object_): An object that may contain possible options for normal `chat.delete` (see [documentation](https://api.slack.com/methods/chat.postMessage) for more details)
 
-<img alt='Persistent menu' src='/assets/persistent-menu.png' width='600px' />
+##### Returns
 
-#### Automatically mark as read
+(_Promise_): Send to outgoing middlewares a formatted `Object` than contains all information (platform, type, text, raw) about the attachment that needs to be sent to Slack platform.
 
-Directly in UI, users can setup if they want to automatically mark all messages as read ([facebook doc](https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-read)).
+### Remove reaction
 
-<img alt='Mark as read' src='/assets/automatically-mark-as-read.png' width='600px' />
+By using this module, it's easy to remove any type of reaction on previous message ([slack doc](https://api.slack.com/methods/reactions.remove)).
 
-#### Trusted domains
+#### `bp.slack.sendRemoveReaction(name, options)` -> Promise
 
-By using UI, users can configure \(add, modify and remove\) trusted domains ([facebook doc](https://developers.facebook.com/docs/messenger-platform/thread-settings/domain-whitelisting)).
+##### Arguments
 
-<img alt='Trusted domains' src='/assets/trusted-domains.png' width='600px'/>
+1. ` name ` (_String_): Correspond to the name of reaction
+2. ` options ` (_Object_): An object that may contains:
+- `channel`: Correspond to unique Channel's where you want to react. Usually, this `channel` is available from previous message. (**required** to reaction to text or attachments)
+- `timestamp`: Correspond to unique timestamp of the message. Usually, this `ts` is available from previous message. (**required** to reaction to text or attachments)
+- `file` Correspond to the file to add reaction to.
+- `file_comment` File comment to add reaction to.
 
-#### Automatic profile lookup
+##### Returns
 
-Profiles are automatically lookedup using Facebook Graph API. The profile of the user can be found in the incoming middleware events: `event.user`
-
-The following properties are available: first_name, last_name, locale, gender, timezone.
+(_Promise_): Send to outgoing middlewares a formatted `Object` than contains all information (platform, type, text, raw) about the reaction that needs to be sent.
  
 #### Save users in Database
 
 Users are automatically persisted in the built-in botpress database using the built-in `bp.db.saveUser` function.
 
-#### Webhook security check
+### API
 
-botpress-messenger verifies that requests really come from Facebook's servers by validating requests hash.
+##### `GET /api/botpress-slack/status`
+
+Returns status of the connexion.
+
+##### `GET /api/botpress-slack/user?id=<USER_ID>`
+
+Returns information about a specific user.
+
+##### `GET /api/botpress-slack/users`
+
+Returns the list of all the users.
+
+##### `GET /api/botpress-slack/channels`
+
+Returns the list of the channels.
+
+##### `GET /api/botpress-slack/team`
+
+Return team information.
+
+##### `GET /api/botpress-slack/data`
+
+Returns all information about the bot, users, channels, teams...
 
 
 ### Community
@@ -521,5 +565,5 @@ Get an invite and join us now! 👉[https://slack.botpress.io](https://slack.bot
 
 ### License
 
-botpress-messenger is licensed under AGPL-3.0
+botpress-slack is licensed under AGPL-3.0
 

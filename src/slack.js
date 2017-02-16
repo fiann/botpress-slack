@@ -140,7 +140,6 @@ class Slack {
     return this.data
   }
 
-
   getUserProfile(userId) {
     const user = _.find(this.getUsers(), _.matchesProperty('id', userId))
 
