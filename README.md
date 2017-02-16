@@ -16,7 +16,7 @@ It's also possible to install it through the Botpress UI in the modules section.
 
 ## Get started
 
-To setup connexion of your chatbot to Slack, you need to fill the connexion settings directly in the module interface. In fact, you only need to follow these 5 steps and your bot will be ready to use.
+To setup connexion of your chatbot to Slack, you need to fill the connexion settings directly in the module interface. In fact, you only need to follow these steps and your bot will be ready to use.
 
 Settings can also be set programmatically by providing the settings in the `${modules_config_dir}/botpress-slack.json`
 
@@ -24,17 +24,17 @@ Settings can also be set programmatically by providing the settings in the `${mo
 
 ##### 1. Setup Hostname
 
-You need to manually enter your hostname. If you are developping locally, we suggest using **[ngrok](#ngrok)** to deploy your chatbot ([learn more about ngrok]((https://ngrok.com))
+You need to manually enter your hostname. If you are developping locally, we suggest using [ngrok](#ngrok) to deploy your chatbot ([learn more about ngrok]((https://ngrok.com))
 
-##### 2. Create a [**Slack app**](https://api.slack.com/apps?new_app=1).
+##### 2. Create a [**Slack app**](https://api.slack.com/apps?new_app=1)
   
-<img alt='Create app' src='/assets/create-app-slack.png' width='500px' />
+<img alt='Create app' src='/assets/create-app-slack.png' width='450px' />
 
 ##### 3. Get Client ID and Client Secret
 
 These information are available on *Basic Information* of you app. You only need to copy them in module interface.
 
-<img alt='Client id and client secret' src='/assets/client-id-client-secret.png' width='400px' />
+<img alt='Client id and client secret' src='/assets/client-id-client-secret.png' width='500px' />
 
 ##### 4. Setup OAuth & Permissions
 
@@ -46,7 +46,7 @@ On the *OAuth & Permissions* page of your slack app, you need to enter your redi
 
 On the *Bot Users* page of your slack app, you need to add a *Bot User* by clicking on *Add a Bot User*. We suggest you to turn on *Always Show My Bot as Online* for be able to use RTM API correctly.
 
-<img alt='Bot users' src='/assets/bot-users.png' width='500px;' />
+<img alt='Bot users' src='/assets/bot-user.png' width='500px;' />
 
 ##### 6. Setup Interactive Messages
 
@@ -58,22 +58,19 @@ On the *Interactive messages* page of your slack app, you need to *Enable Intera
 
 The verification token should appear below App Id and App  information are available on *Basic Information* of you app. You only need to copy them in module interface.
 
-<img alt='App id and app secret' src='/assets/app-id-app-secret.png' width='400px' />
+<img alt='App id and app secret' src='/assets/verification-token.png' width='500px' />
 
-##### 8. Setup Interactive Messages
+##### 8. Set scope
 
-On the *Interactive messages* page of your slack app, you need to *Enable Interactive Messages* and add a *Request URL*. The URL entered needs to be format as *<hostname> + /api/botpress-slack/action-endpoint*.
+On your configuration page of your module, you need to set scope of your bot. We suggest you to keep the default configuration _(admin,bot,chat:write:bot,commands,identify,incoming-webhook)_, but if you want to want to modify it, we suggest you to look to the [documentation](https://api.slack.com/docs/oauth-scopes).
 
-<img alt='Interactive messages' src='/assets/interactive-messages.png' width='500px;' />
-
-##### 7. Authenticate & Connect
+##### 9. Authenticate & Connect
 
 Next step is to authenticate and connect your bot. To do it, you only need to click on *Authenticate & Connect* on your module and follow the steps. Once it will be done, you should received an *API Token* and a *Bot Token*. They will appear on your settings page of your module.
 
-<img alt='Connexion completed' src='/assets/interactive-messages.png' width='500px;' />
+<img alt='Connexion completed' src='/assets/completed.png' width='500px;' />
 
-
-To see in details how to configure completly this module, videos are available on our Youtube Channel \(soon\).
+If you want to have more information about doumentation, we suggest you to look at the [official slack documentation](https://api.slack.com/).
 
 
 ## Features
@@ -81,32 +78,20 @@ To see in details how to configure completly this module, videos are available o
 ### Incoming
 
 * [Profile](#profile)
-* [Text messages](#text-messages)
-* [Postbacks](#postbacks)
-* [Attachments](#attachments)
-* [Referrals](#referrals)
-* [Quick replies](#quick-replies)
-* [Optins](#optins)
-* [Delivery](#delivery)
-* [Read](#read)
+* [Text](#text)
+* [Reaction](#reaction)
+* [Typing](#typing)
+* [File](#file)
+* [User mention](#user-mention)
+* [Bot mention](#bot-mention)
+* [Direct message](#direct-message)
+* [Validation](#validation)
 
 ### Outgoing
 
-* [Text messages](#text-messages-1)
-* [Attachments](#attachments-1)
-* [Templates](#templates)
-* [Quick replies](#quick-replies-1)
-* [Automatic typing indicator](#automatic-typing-indicator)
-* [Postbacks](#postbacks-1)
-* [Referrals](#referrals-1)
-* [Display Get Started](#display-get-started)
-* [Greeting message](#greeting-message)
-* [Persistent menu](#persistent-menu)
-* [Automatically mark as read](#automatically-mark-as-read)
-* [Trusted domains](#trusted-domains)
-* [Automatic profile lookup](#automatic-profile-lookup)
-* [Save users in DB](#save-users-in-database)
-* [Webhook security check](#webhook-security-check)
+* [Text](#text-messages)
+* [Attachments](#attachments)
+* [Reaction](#reaction)
 
 ## Reference
 
