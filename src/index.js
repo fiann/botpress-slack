@@ -1,3 +1,5 @@
+import checkVersion from 'botpress-version-manager'
+
 import outgoing from './outgoing'
 import actions from './actions'
 
@@ -42,6 +44,9 @@ module.exports = {
   },
 
   init(bp) {
+    
+    checkVersion(bp, __dirname)
+
     bp.middlewares.register({
       name: 'slack.sendMessages',
       type: 'outgoing',
